@@ -1,0 +1,120 @@
+#define REG_ProductId								0x00
+#define REG_DisplayMode								0x01 
+#define REG_ColumnAddressStart1						0x02
+#define REG_ColumnAddressStart2						0x03
+#define REG_ColumnAddressEnd1						0x04
+#define REG_ColumnAddressEnd2						0x05
+#define REG_RowAddressStart1						0x06
+#define REG_RowAddressStart2						0x07
+#define REG_RowAddressEnd1							0x08
+#define REG_RowAddressEnd2							0x09
+#define REG_PartialAreaStartRow1					0x0a
+#define REG_PartialAreaStartRow2					0x0b
+#define REG_PartialAreaEndRow1						0x0c
+#define REG_PartialAreaEndRow2						0x0d
+#define REG_VerticalScrollTopFixedArea1				0x0e
+#define REG_VerticalScrollTopFixedArea2				0x0f
+#define REG_VerticalScrollHeightArea1				0x10
+#define REG_VerticalScrollHeightArea2				0x11
+#define REG_VerticalScrollButtonFixed1				0x12
+#define REG_VerticalScrollButtonFixed2				0x13
+#define REG_VerticalScrollStartAddress1				0x14
+#define REG_VerticalScrollStartAddress2				0x15
+#define REG_MemoryAccessControl						0x16
+	#define SM								0x01
+	#define SRL_EN							0x02
+	#define SS								0x04
+	#define BGR								0x08
+	#define GS								0x10
+	#define MV								0x20
+	#define MX								0x40
+	#define MY								0x80
+#define REG_OSCControl1								0x17
+	#define OSC_EN							0x01
+#define REG_OSCControl2								0x18
+#define REG_PowerControl1							0x19
+	#define STB								0x01
+	#define VL_TRI							0x02
+	#define XDK								0x04
+	#define SDK								0x08
+	#define PON								0x10
+	#define GASENB							0x80
+#define REG_PowerControl2							0x1a
+#define REG_PowerControl3							0x1b
+#define REG_PowerControl4							0x1c
+#define REG_PowerControl5							0x1d
+#define REG_PowerControl6							0x1e
+#define REG_VCOMControl								0x1f
+#define REG_DataReadWrite							0x22 
+#define REG_DisplayControl1							0x23
+#define REG_DisplayControl2							0x24
+#define REG_DisplayControl3							0x25
+#define REG_DisplayControl4							0x26
+#define REG_DisplayControl5							0x27
+#define REG_DisplayControl6							0x28
+#define REG_DisplayControl7							0x29
+#define REG_DisplayControl8							0x2a
+#define REG_CycleControl1							0x2b
+#define REG_CycleControl2							0x2c
+#define REG_CycleControl3							0x2d
+#define REG_CycleControl4							0x2e
+#define REG_CycleControl5							0x2f
+#define REG_CycleControl6							0x30
+#define REG_CycleControl7							0x31
+#define REG_CycleControl8							0x32
+#define REG_CycleControl10							0x34
+#define REG_CycleControl11							0x35
+#define REG_CycleControl12							0x36
+#define REG_CycleControl13							0x37
+#define REG_CycleControl14							0x38
+#define REG_CycleControl15							0x39
+#define REG_InterfaceControl1						0x3a
+#define REG_SourceControl1							0x3c
+#define REG_SourceControl2							0x3d
+#define REG_GammaControl1							0x3e 
+#define REG_GammaControl2							0x3f 
+#define REG_GammaControl3							0x40 
+#define REG_GammaControl4							0x41 
+#define REG_GammaControl5							0x42 
+#define REG_GammaControl6							0x43 
+#define REG_GammaControl7							0x44 
+#define REG_GammaControl8							0x45 
+#define REG_GammaControl9							0x46 
+#define REG_GammaControl10							0x47 
+#define REG_GammaControl11							0x48 
+#define REG_GammaControl12							0x49 
+#define REG_PANELControl							0x55 
+#define REG_OTP1									0x56 
+#define REG_OTP2									0x57 
+#define REG_OTP3									0x58 
+#define REG_OTP4									0x59 
+#define REG_IPControl								0x5a 
+#define REG_DGCLUTWrite								0x5c 
+#define REG_DATAControl								0x5d
+#define REG_TestMode								0x83 
+	#define TEST_Mode						0x02
+#define REG_VDDDcontrol								0x85 
+#define REG_PowerDrivingControl						0x8A 
+#define REG_VGSRESControl1							0x8B 
+	#define RES_VGS1						0x01
+#define REG_VGSRESControl2							0x8C 
+	#define RES_VGS0						0x80
+#define REG_PWMControl0								0x91 
+	#define SYNC							0x01
+#define REG_PWMControl1								0x95 
+#define REG_PWMControl2								0x96 
+#define REG_PWMControl3								0x97 
+#define REG_CABCPeriodControl1						0x6B 
+#define REG_CABCPeriodControl2						0x6C 
+#define REG_CABCGain1								0x6F 
+#define REG_CABCGain2								0x70 
+#define REG_CABCGain3								0x71 
+#define REG_CABCGain4								0x72 
+#define REG_CABCGain5								0x73 
+#define REG_CABCGain6								0x74 
+#define REG_CABCGain7								0x75 
+#define REG_CABCGain8								0x76 
+#define REG_CABCGain9								0x77 
+
+
+
