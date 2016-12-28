@@ -883,7 +883,7 @@ static inline int usart_lin_transfer_completed(volatile avr32_usart_t *usart)
 
 //! @}
 
-void setup_tx_interrupt();
+void setup_tx_interrupt(void);
 
 
 #endif  // _USART_H_

@@ -37,9 +37,9 @@
       </ToolOptions>
     </com_atmel_avrdbg_tool_jtagicemkii>
     <OutputType>Executable</OutputType>
-    <Language>C</Language>
+    <Language>CPP</Language>
     <avrtoolinterface>JTAG</avrtoolinterface>
-    <ToolchainName>com.Atmel.AVRGCC32.C</ToolchainName>
+    <ToolchainName>com.Atmel.AVRGCC32.CPP</ToolchainName>
     <ToolchainFlavour>Native</ToolchainFlavour>
     <KeepTimersRunning>true</KeepTimersRunning>
     <OverrideVtor>false</OverrideVtor>
@@ -103,7 +103,7 @@
     <OutputFileName>USBDisplay32</OutputFileName>
     <OutputFileExtension>.elf</OutputFileExtension>
     <ToolchainSettings>
-      <Avr32Gcc>
+      <Avr32GccCpp>
         <avr32gcc.common.outputfiles.hex>True</avr32gcc.common.outputfiles.hex>
         <avr32gcc.common.outputfiles.lss>True</avr32gcc.common.outputfiles.lss>
         <avr32gcc.common.outputfiles.eep>True</avr32gcc.common.outputfiles.eep>
@@ -156,104 +156,25 @@
         <avr32gcc.compiler.optimization.PrepareFunctionsForGarbageCollection>True</avr32gcc.compiler.optimization.PrepareFunctionsForGarbageCollection>
         <avr32gcc.compiler.warnings.AllWarnings>True</avr32gcc.compiler.warnings.AllWarnings>
         <avr32gcc.compiler.miscellaneous.OtherFlags>-std=gnu99 -Wstrict-prototypes -Wmissing-prototypes -Werror-implicit-function-declaration -Wpointer-arith -mrelax</avr32gcc.compiler.miscellaneous.OtherFlags>
+        <avr32gcccpp.compiler.symbols.DefSymbols>
+          <ListValues>
+            <Value>BOARD=USER_BOARD</Value>
+            <Value>ACCESS_USB_ENABLED</Value>
+          </ListValues>
+        </avr32gcccpp.compiler.symbols.DefSymbols>
         <avr32gcc.linker.general.DoNotUseStandardStartFiles>True</avr32gcc.linker.general.DoNotUseStandardStartFiles>
-        <avr32gcc.linker.libraries.Libraries>
-          <ListValues>
-            <Value>libnewlib_addons-at32ucr2-speed_opt.a</Value>
-            <Value>libm</Value>
-          </ListValues>
-        </avr32gcc.linker.libraries.Libraries>
-        <avr32gcc.linker.libraries.LibrarySearchPaths>
-          <ListValues>
-            <Value>../src/asf/thirdparty/newlib_addons/libs/at32ucr2</Value>
-          </ListValues>
-        </avr32gcc.linker.libraries.LibrarySearchPaths>
         <avr32gcc.linker.optimization.GarbageCollectUnusedSections>True</avr32gcc.linker.optimization.GarbageCollectUnusedSections>
         <avr32gcc.linker.miscellaneous.LinkerFlags>-Wl,--relax</avr32gcc.linker.miscellaneous.LinkerFlags>
         <avr32gcc.assembler.general.AssemblerFlags>-mrelax</avr32gcc.assembler.general.AssemblerFlags>
-        <avr32gcc.assembler.general.IncludePaths>
-          <ListValues>
-            <Value>../src</Value>
-            <Value>../src/asf/avr32/drivers/intc</Value>
-            <Value>../src/asf/avr32/utils</Value>
-            <Value>../src/asf/avr32/utils/preprocessor</Value>
-            <Value>../src/asf/common/applications/user_application/user_board</Value>
-            <Value>../src/asf/common/boards</Value>
-            <Value>../src/asf/common/boards/user_board</Value>
-            <Value>../src/asf/common/utils</Value>
-            <Value>../src/config</Value>
-            <Value>../src/asf/avr32/drivers/gpio</Value>
-            <Value>../src/asf/avr32/drivers/cpu/cycle_counter</Value>
-            <Value>../src/asf/avr32/services/delay</Value>
-            <Value>../src/asf/avr32/drivers/pm</Value>
-            <Value>../src/asf/avr32/drivers/flashc</Value>
-            <Value>../src/asf/avr32/drivers/tc</Value>
-            <Value>../src/asf/common/services/storage/ctrl_access</Value>
-            <Value>../src/asf/avr32/drivers/usbb</Value>
-            <Value>../src/asf/common/services/sleepmgr</Value>
-            <Value>../src/asf/common/services/clock</Value>
-            <Value>../src/asf/common/services/usb/class/cdc/device</Value>
-            <Value>../src/asf/common/services/usb/class/cdc</Value>
-            <Value>../src/asf/common/services/usb/udc</Value>
-            <Value>../src/asf/common/services/usb</Value>
-            <Value>../src/asf/avr32/drivers/usart</Value>
-            <Value>../src/asf/common/services/serial</Value>
-            <Value>../src/asf/common/services/usb/class/msc/device</Value>
-            <Value>../src/asf/common/services/usb/class/msc</Value>
-            <Value>../src/asf/thirdparty/newlib_addons/libs/include</Value>
-            <Value>../src/asf/avr32/drivers/wdt</Value>
-            <Value>../src/ASF/avr32/drivers/spi</Value>
-            <Value>../src/ASF/common/services/spi/uc3_spi</Value>
-            <Value>../src/ASF/common/services/spi</Value>
-            <Value>%24(PackRepoDir)\atmel\UC3A_DFP\1.0.53\include\AT32UC3A3256</Value>
-          </ListValues>
-        </avr32gcc.assembler.general.IncludePaths>
         <avr32gcc.preprocessingassembler.general.AssemblerFlags>-mrelax</avr32gcc.preprocessingassembler.general.AssemblerFlags>
-        <avr32gcc.preprocessingassembler.general.IncludePaths>
-          <ListValues>
-            <Value>../src</Value>
-            <Value>../src/asf/avr32/drivers/intc</Value>
-            <Value>../src/asf/avr32/utils</Value>
-            <Value>../src/asf/avr32/utils/preprocessor</Value>
-            <Value>../src/asf/common/applications/user_application/user_board</Value>
-            <Value>../src/asf/common/boards</Value>
-            <Value>../src/asf/common/boards/user_board</Value>
-            <Value>../src/asf/common/utils</Value>
-            <Value>../src/config</Value>
-            <Value>../src/asf/avr32/drivers/gpio</Value>
-            <Value>../src/asf/avr32/drivers/cpu/cycle_counter</Value>
-            <Value>../src/asf/avr32/services/delay</Value>
-            <Value>../src/asf/avr32/drivers/pm</Value>
-            <Value>../src/asf/avr32/drivers/flashc</Value>
-            <Value>../src/asf/avr32/drivers/tc</Value>
-            <Value>../src/asf/common/services/storage/ctrl_access</Value>
-            <Value>../src/asf/avr32/drivers/usbb</Value>
-            <Value>../src/asf/common/services/sleepmgr</Value>
-            <Value>../src/asf/common/services/clock</Value>
-            <Value>../src/asf/common/services/usb/class/cdc/device</Value>
-            <Value>../src/asf/common/services/usb/class/cdc</Value>
-            <Value>../src/asf/common/services/usb/udc</Value>
-            <Value>../src/asf/common/services/usb</Value>
-            <Value>../src/asf/avr32/drivers/usart</Value>
-            <Value>../src/asf/common/services/serial</Value>
-            <Value>../src/asf/common/services/usb/class/msc/device</Value>
-            <Value>../src/asf/common/services/usb/class/msc</Value>
-            <Value>../src/asf/thirdparty/newlib_addons/libs/include</Value>
-            <Value>../src/asf/avr32/drivers/wdt</Value>
-            <Value>../src/ASF/avr32/drivers/spi</Value>
-            <Value>../src/ASF/common/services/spi/uc3_spi</Value>
-            <Value>../src/ASF/common/services/spi</Value>
-            <Value>%24(PackRepoDir)\atmel\UC3A_DFP\1.0.53\include\AT32UC3A3256</Value>
-          </ListValues>
-        </avr32gcc.preprocessingassembler.general.IncludePaths>
-      </Avr32Gcc>
+      </Avr32GccCpp>
     </ToolchainSettings>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <OutputFileName>USBDisplay32</OutputFileName>
     <OutputFileExtension>.elf</OutputFileExtension>
     <ToolchainSettings>
-      <Avr32Gcc>
+      <Avr32GccCpp>
   <avr32gcc.common.outputfiles.hex>True</avr32gcc.common.outputfiles.hex>
   <avr32gcc.common.outputfiles.lss>True</avr32gcc.common.outputfiles.lss>
   <avr32gcc.common.outputfiles.eep>True</avr32gcc.common.outputfiles.eep>
@@ -262,6 +183,7 @@
     <ListValues>
       <Value>BOARD=USER_BOARD</Value>
       <Value>ACCESS_USB_ENABLED</Value>
+      <Value>DEBUG</Value>
     </ListValues>
   </avr32gcc.compiler.symbols.DefSymbols>
   <avr32gcc.compiler.directories.IncludePaths>
@@ -304,25 +226,20 @@
   <avr32gcc.compiler.optimization.level>Optimize most (-O3)</avr32gcc.compiler.optimization.level>
   <avr32gcc.compiler.optimization.OtherFlags>-fdata-sections</avr32gcc.compiler.optimization.OtherFlags>
   <avr32gcc.compiler.optimization.PrepareFunctionsForGarbageCollection>True</avr32gcc.compiler.optimization.PrepareFunctionsForGarbageCollection>
+  <avr32gcc.compiler.optimization.UseAssemblerForPseudoInstructions>True</avr32gcc.compiler.optimization.UseAssemblerForPseudoInstructions>
   <avr32gcc.compiler.optimization.DebugLevel>Maximum (-g3)</avr32gcc.compiler.optimization.DebugLevel>
   <avr32gcc.compiler.warnings.AllWarnings>True</avr32gcc.compiler.warnings.AllWarnings>
   <avr32gcc.compiler.miscellaneous.OtherFlags>-std=gnu99 -Wstrict-prototypes -Wmissing-prototypes -Werror-implicit-function-declaration -Wpointer-arith -mrelax -fno-strict-aliasing</avr32gcc.compiler.miscellaneous.OtherFlags>
-  <avr32gcc.linker.general.DoNotUseStandardStartFiles>True</avr32gcc.linker.general.DoNotUseStandardStartFiles>
-  <avr32gcc.linker.libraries.Libraries>
+  <avr32gcccpp.compiler.general.ChangeDefaultCharTypeUnsigned>True</avr32gcccpp.compiler.general.ChangeDefaultCharTypeUnsigned>
+  <avr32gcccpp.compiler.general.ChangeDefaultBitFieldUnsigned>True</avr32gcccpp.compiler.general.ChangeDefaultBitFieldUnsigned>
+  <avr32gcccpp.compiler.symbols.DefSymbols>
     <ListValues>
-      <Value>libnewlib_addons-at32ucr2-speed_opt.a</Value>
-      <Value>libm</Value>
+      <Value>BOARD=USER_BOARD</Value>
+      <Value>ACCESS_USB_ENABLED</Value>
+      <Value>DEBUG</Value>
     </ListValues>
-  </avr32gcc.linker.libraries.Libraries>
-  <avr32gcc.linker.libraries.LibrarySearchPaths>
-    <ListValues>
-      <Value>../src/asf/thirdparty/newlib_addons/libs/at32ucr2</Value>
-    </ListValues>
-  </avr32gcc.linker.libraries.LibrarySearchPaths>
-  <avr32gcc.linker.optimization.GarbageCollectUnusedSections>True</avr32gcc.linker.optimization.GarbageCollectUnusedSections>
-  <avr32gcc.linker.miscellaneous.LinkerFlags>-Wl,--relax</avr32gcc.linker.miscellaneous.LinkerFlags>
-  <avr32gcc.assembler.general.AssemblerFlags>-mrelax</avr32gcc.assembler.general.AssemblerFlags>
-  <avr32gcc.assembler.general.IncludePaths>
+  </avr32gcccpp.compiler.symbols.DefSymbols>
+  <avr32gcccpp.compiler.directories.IncludePaths>
     <ListValues>
       <Value>../src</Value>
       <Value>../src/asf/avr32/drivers/intc</Value>
@@ -358,46 +275,28 @@
       <Value>../src/ASF/common/services/spi</Value>
       <Value>%24(PackRepoDir)\atmel\UC3A_DFP\1.0.53\include\AT32UC3A3256</Value>
     </ListValues>
-  </avr32gcc.assembler.general.IncludePaths>
-  <avr32gcc.preprocessingassembler.general.AssemblerFlags>-mrelax</avr32gcc.preprocessingassembler.general.AssemblerFlags>
-  <avr32gcc.preprocessingassembler.general.IncludePaths>
+  </avr32gcccpp.compiler.directories.IncludePaths>
+  <avr32gcccpp.compiler.optimization.level>Optimize most (-O3)</avr32gcccpp.compiler.optimization.level>
+  <avr32gcccpp.compiler.optimization.PrepareFunctionsForGarbageCollection>True</avr32gcccpp.compiler.optimization.PrepareFunctionsForGarbageCollection>
+  <avr32gcccpp.compiler.optimization.UseAssemblerForPseudoInstructions>True</avr32gcccpp.compiler.optimization.UseAssemblerForPseudoInstructions>
+  <avr32gcccpp.compiler.optimization.DebugLevel>Maximum (-g3)</avr32gcccpp.compiler.optimization.DebugLevel>
+  <avr32gcccpp.compiler.warnings.AllWarnings>True</avr32gcccpp.compiler.warnings.AllWarnings>
+  <avr32gcccpp.linker.optimization.GarbageCollectUnusedSections>True</avr32gcccpp.linker.optimization.GarbageCollectUnusedSections>
+  <avr32gcccpp.linker.optimization.PutReadOnlyDataInWritableDataSection>True</avr32gcccpp.linker.optimization.PutReadOnlyDataInWritableDataSection>
+  <avr32gcccpp.linker.optimization.AllowDirectReferencesToDataSection>True</avr32gcccpp.linker.optimization.AllowDirectReferencesToDataSection>
+  <avr32gcccpp.assembler.general.IncludePaths>
     <ListValues>
-      <Value>../src</Value>
-      <Value>../src/asf/avr32/drivers/intc</Value>
-      <Value>../src/asf/avr32/utils</Value>
-      <Value>../src/asf/avr32/utils/preprocessor</Value>
-      <Value>../src/asf/common/applications/user_application/user_board</Value>
-      <Value>../src/asf/common/boards</Value>
-      <Value>../src/asf/common/boards/user_board</Value>
-      <Value>../src/asf/common/utils</Value>
-      <Value>../src/config</Value>
-      <Value>../src/asf/avr32/drivers/gpio</Value>
-      <Value>../src/asf/avr32/drivers/cpu/cycle_counter</Value>
-      <Value>../src/asf/avr32/services/delay</Value>
-      <Value>../src/asf/avr32/drivers/pm</Value>
-      <Value>../src/asf/avr32/drivers/flashc</Value>
-      <Value>../src/asf/avr32/drivers/tc</Value>
-      <Value>../src/asf/common/services/storage/ctrl_access</Value>
-      <Value>../src/asf/avr32/drivers/usbb</Value>
-      <Value>../src/asf/common/services/sleepmgr</Value>
-      <Value>../src/asf/common/services/clock</Value>
-      <Value>../src/asf/common/services/usb/class/cdc/device</Value>
-      <Value>../src/asf/common/services/usb/class/cdc</Value>
-      <Value>../src/asf/common/services/usb/udc</Value>
-      <Value>../src/asf/common/services/usb</Value>
-      <Value>../src/asf/avr32/drivers/usart</Value>
-      <Value>../src/asf/common/services/serial</Value>
-      <Value>../src/asf/common/services/usb/class/msc/device</Value>
-      <Value>../src/asf/common/services/usb/class/msc</Value>
-      <Value>../src/asf/thirdparty/newlib_addons/libs/include</Value>
-      <Value>../src/asf/avr32/drivers/wdt</Value>
-      <Value>../src/ASF/avr32/drivers/spi</Value>
-      <Value>../src/ASF/common/services/spi/uc3_spi</Value>
-      <Value>../src/ASF/common/services/spi</Value>
       <Value>%24(PackRepoDir)\atmel\UC3A_DFP\1.0.53\include\AT32UC3A3256</Value>
     </ListValues>
-  </avr32gcc.preprocessingassembler.general.IncludePaths>
-</Avr32Gcc>
+  </avr32gcccpp.assembler.general.IncludePaths>
+  <avr32gcccpp.assembler.debugging.DebugLevel>Default (-g)</avr32gcccpp.assembler.debugging.DebugLevel>
+  <avr32gcccpp.preprocessingassembler.general.IncludePaths>
+    <ListValues>
+      <Value>%24(PackRepoDir)\atmel\UC3A_DFP\1.0.53\include\AT32UC3A3256</Value>
+    </ListValues>
+  </avr32gcccpp.preprocessingassembler.general.IncludePaths>
+  <avr32gcccpp.preprocessingassembler.debugging.DebugLevel>Default (-Wa,-g)</avr32gcccpp.preprocessingassembler.debugging.DebugLevel>
+</Avr32GccCpp>
     </ToolchainSettings>
   </PropertyGroup>
   <ItemGroup>
@@ -527,15 +426,15 @@
     <Compile Include="src\asf\avr32\utils\preprocessor\tpaste.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="src\asf\avr32\utils\startup\startup_uc3.S">
+    <None Include="src\asf\avr32\utils\startup\startup_uc3.S">
       <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\asf\avr32\utils\startup\trampoline_uc3.S">
+    </None>
+    <None Include="src\asf\avr32\utils\startup\trampoline_uc3.S">
       <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\asf\avr32\utils\startup\trampoline_uc3.h">
+    </None>
+    <None Include="src\asf\avr32\utils\startup\trampoline_uc3.h">
       <SubType>compile</SubType>
-    </Compile>
+    </None>
     <Compile Include="src\asf\avr32\utils\status_codes.h">
       <SubType>compile</SubType>
     </Compile>
@@ -723,11 +622,23 @@
       <SubType>compile</SubType>
       <Link>displaycommands.h</Link>
     </Compile>
+    <Compile Include="src\lcdhwiface.h">
+      <SubType>compile</SubType>
+      <Link>lcdhwiface.h</Link>
+    </Compile>
     <Compile Include="src\lcdif.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="src\lcdif.c">
+    <None Include="src\lcdif.c">
       <SubType>compile</SubType>
+    </None>
+    <Compile Include="src\lcdiface.h">
+      <SubType>compile</SubType>
+      <Link>lcdiface.h</Link>
+    </Compile>
+    <Compile Include="src\lcdiface_hx8352a.h">
+      <SubType>compile</SubType>
+      <Link>lcdiface_hx8352a.h</Link>
     </Compile>
     <Compile Include="src\lcdtext.c">
       <SubType>compile</SubType>
@@ -739,7 +650,7 @@
       <SubType>compile</SubType>
       <Link>lcd_conf.h</Link>
     </Compile>
-    <Compile Include="src\main.c">
+    <Compile Include="src\main.cpp">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\touch.c">

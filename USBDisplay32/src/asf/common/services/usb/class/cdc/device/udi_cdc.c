@@ -502,12 +502,12 @@ void udi_cdc_data_recevied(udd_ep_status_t status, iram_size_t n)
 			udi_cdc_blt_bytes_to_go *= rx_buffer[buf_sel_trans].cmd.blt.height;
 			udi_cdc_blt_bytes_to_go *= 2;
 			
-			LCD_BltStart(rx_buffer[buf_sel_trans].cmd.bltrle.x, rx_buffer[buf_sel_trans].cmd.bltrle.y, rx_buffer[buf_sel_trans].cmd.bltrle.width, rx_buffer[buf_sel_trans].cmd.bltrle.height );
+// TODO			LCD_BltStart(rx_buffer[buf_sel_trans].cmd.bltrle.x, rx_buffer[buf_sel_trans].cmd.bltrle.y, rx_buffer[buf_sel_trans].cmd.bltrle.width, rx_buffer[buf_sel_trans].cmd.bltrle.height );
 		}
 		else if ( rx_buffer[buf_sel_trans].cmd.light.cmd == CMD_SET_BACKLIGHT && n >= sizeof(rx_buffer[buf_sel_trans].cmd.light) )
 		{
 			
-			LCD_SetBacklight( rx_buffer[buf_sel_trans].cmd.light.intensity );
+// TODO			LCD_SetBacklight( rx_buffer[buf_sel_trans].cmd.light.intensity );
 		}
 		else if ( rx_buffer[buf_sel_trans].cmd.boot.cmd == CMD_BOOTLOADER  && n >= sizeof(rx_buffer[buf_sel_trans].cmd.boot) )
 		{

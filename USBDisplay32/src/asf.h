@@ -45,6 +45,11 @@
  * The file is automatically generated and will be re-written when
  * running the ASF driver selector tool. Any changes will be discarded.
  */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <board.h>
 #include <status_codes.h>
 #include <interrupt.h>
@@ -68,4 +73,7 @@
 #include <spi.h>
 #include <spi_master.h>
 
+#ifdef __cplusplus
+}
+#endif
 #endif // ASF_H

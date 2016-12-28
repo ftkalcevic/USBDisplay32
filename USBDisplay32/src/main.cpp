@@ -22,8 +22,27 @@
 #include "displaycommands.h"
 #include "serial.h"
 #include "touch.h"
+#include "lcd_conf.h"
+
+#include "lcdiface_hx8352a.h"
+#include "lcdtext.h"
 
 #define USE_USB_CDC
+
+
+#include "../fonts/Font6x13.h"
+#include "../fonts/FontTypewriter.h"
+
+static struct SFontData  fontData[] =
+{
+	/*45x17*/    { FONT6X13_WIDTH, FONT6X13_HEIGHT, SCREEN_WIDTH / FONT6X13_WIDTH, SCREEN_HEIGHT / FONT6X13_HEIGHT, Font6x13 },
+	/*22x9 */    { FONTTYPEWRITER_WIDTH, FONTTYPEWRITER_HEIGHT, SCREEN_WIDTH / FONTTYPEWRITER_WIDTH, SCREEN_HEIGHT / FONTTYPEWRITER_HEIGHT, FontTypewriter },
+};
+
+
+static LCDIFaceHX8352A<SCREEN_WIDTH,SCREEN_HEIGHT> lcd;
+static LCDText<LCDIFaceHX8352A<SCREEN_WIDTH,SCREEN_HEIGHT>, SCREEN_WIDTH, SCREEN_HEIGHT > text(lcd, fontData, countof(fontData) );
+
 
 
 static void serial_write_string( volatile avr32_usart_t *usart, const char *s )
@@ -47,7 +66,7 @@ static inline unsigned short SwapBytes( unsigned short n )
 extern int _write(int file, char *ptr, int len);
 int _write(int file, char *ptr, int len)
 {
-    LCDText_WriteString( len, ptr );
+    text.WriteString( len, ptr );
     return len;
 }
 
@@ -56,25 +75,25 @@ static void speedtest( void )
     Set_sys_count(0);
     for ( int i = 0; i < 1000; i++ )
     {
-	    LCD_ClearScreen(i);
+	    lcd.ClearScreen(i);
     }
     int n = Get_sys_count();
     double t1 = ((double)n)/CLOCK;
 	
     Set_sys_count(0);
-    char *sTest = "The rain in spain falls mainly on the plain.";
+    const char *sTest = "The rain in spain falls mainly on the plain.";
     int nLen = strlen(sTest);
     for ( int i = 0; i < 1000; i++ )
     {
-	    LCDText_WriteString( nLen, sTest );
+	    text.WriteString( nLen, sTest );
     }
     n = Get_sys_count();
     double t2 = ((double)n)/CLOCK;
 	
     char s[100];
-    LCD_ClearScreen(0);
+    lcd.ClearScreen(0);
     sprintf(s,"Clear=%.3f, Text=%.3f", t1, t2 );
-    LCDText_WriteString( strlen(s), s );
+    text.WriteString( strlen(s), s );
 }
 
 //#define MAIN_BUFFER
@@ -189,7 +208,7 @@ static void ProcessDisplayData( int b )
 		            case CMD_CLEAR_SCREEN: // Clear Screen 0x02,
 	                    sprintf(s, "cls\r\n" );
 						serial_write_string( &DEVICE_USART, s );
-			            LCD_ClearScreen(g_BackgroundColour);
+			            lcd.ClearScreen(lcd.GetBackgroundColour());
 			            state = WAIT_FOR_COMMAND;
 			            break;
 		            case CMD_WRITE_TEXT: // Write Text - 0x03, data..., NULL,
@@ -237,32 +256,32 @@ static void ProcessDisplayData( int b )
 		        switch (buf.cmd.cmd)
 		        {
 		            case CMD_SET_BACKGROUND_COLOUR: // Set Background Colour 0x00, LSB, MSB
-			            LCD_SetBackgroundColour( RGB( buf.cmd.bg.r, buf.cmd.bg.g, buf.cmd.bg.b) );
+			            lcd.SetBackgroundColour( RGB( buf.cmd.bg.r, buf.cmd.bg.g, buf.cmd.bg.b) );
 		                state = WAIT_FOR_COMMAND;
 			            break;
 						
 		            case CMD_SET_FOREGROUND_COLOUR: // Set Foreground Colour 0x01, LSB, MSB
-			            LCD_SetForegroundColour( RGB( buf.cmd.fg.r, buf.cmd.fg.g, buf.cmd.fg.b) );
+			            lcd.SetForegroundColour( RGB( buf.cmd.fg.r, buf.cmd.fg.g, buf.cmd.fg.b) );
 		                state = WAIT_FOR_COMMAND;
 			            break;
 						
 		            case CMD_SET_TEXT_POSITION: // Set position 0x04, x, y
-			            LCDText_SetTextCursor( buf.cmd.tpos.x, buf.cmd.tpos.y );
+			            text.SetTextCursor( buf.cmd.tpos.x, buf.cmd.tpos.y );
 		                state = WAIT_FOR_COMMAND;
 			            break;
 						
 		            case CMD_SET_GRAPHICS_POSITION: // Set position 0x0?, xlsb, xmsb, y
-			            LCDText_SetPixelCursor( buf.cmd.gpos.x, buf.cmd.gpos.y );
+			            text.SetPixelCursor( buf.cmd.gpos.x, buf.cmd.gpos.y );
 		                state = WAIT_FOR_COMMAND;
 			            break;
 						
 		            case CMD_SET_FONT: // Set font? 0x05, 0/1
-			            LCDText_SetFont( buf.cmd.font.font );
+			            text.SetFont( buf.cmd.font.font );
 		                state = WAIT_FOR_COMMAND;
 			            break;
 						
 		            case CMD_SET_BACKLIGHT: // set backlight 0x06, 0-100
-			            LCD_SetBacklight( buf.cmd.light.intensity );
+			            lcd.SetBacklight( buf.cmd.light.intensity );
 		                state = WAIT_FOR_COMMAND;
 			            break;
 
@@ -272,7 +291,7 @@ static void ProcessDisplayData( int b )
     			        break;
 						
 		            case CMD_DRAW_PIXEL:
-				        LCD_DrawPixel( buf.cmd.pixel.x, buf.cmd.pixel.y );
+				        lcd.DrawPixel( buf.cmd.pixel.x, buf.cmd.pixel.y );
 		                state = WAIT_FOR_COMMAND;
 				        break;
 					
@@ -281,17 +300,17 @@ static void ProcessDisplayData( int b )
 	                    serial_write_string( &DEVICE_USART, s );
 			            if ( buf.cmd.rect.fill )
 			            {
-                            LCD_SolidRect( buf.cmd.rect.x, buf.cmd.rect.y, buf.cmd.rect.width, buf.cmd.rect.height );
+                            lcd.SolidRect( buf.cmd.rect.x, buf.cmd.rect.y, buf.cmd.rect.width, buf.cmd.rect.height );
 			            }											
 			            else
 			            {
-                            LCD_Rect( buf.cmd.rect.x, buf.cmd.rect.y, buf.cmd.rect.width, buf.cmd.rect.height );
+                            lcd.Rect( buf.cmd.rect.x, buf.cmd.rect.y, buf.cmd.rect.width, buf.cmd.rect.height );
 		                }
 		                state = WAIT_FOR_COMMAND;
 			            break;
 					
 				    case CMD_BITBLT:
-				        LCD_BltStart(buf.cmd.blt.x, buf.cmd.blt.y, buf.cmd.blt.width, buf.cmd.blt.height );
+				        lcd.BltStart(buf.cmd.blt.x, buf.cmd.blt.y, buf.cmd.blt.width, buf.cmd.blt.height );
 	                    sprintf(s, "blt %d,%d %dx%d\r\n",buf.cmd.blt.x,buf.cmd.blt.y, buf.cmd.blt.width,buf.cmd.blt.height );
 	                    serial_write_string( &DEVICE_USART, s );
 						WaitBytes = buf.cmd.blt.width * buf.cmd.blt.height * 2;
@@ -299,7 +318,7 @@ static void ProcessDisplayData( int b )
 				        break;
 					
 				    case CMD_BITBLT_RLE:
-				        LCD_BltStart(buf.cmd.bltrle.x, buf.cmd.bltrle.y, buf.cmd.bltrle.width, buf.cmd.bltrle.height );
+				        lcd.BltStart(buf.cmd.bltrle.x, buf.cmd.bltrle.y, buf.cmd.bltrle.width, buf.cmd.bltrle.height );
 						WaitBytes = buf.cmd.bltrle.datalen[0];
 						WaitBytes |= buf.cmd.bltrle.datalen[1] << 8;
 						WaitBytes |= buf.cmd.bltrle.datalen[2] << 16;
@@ -332,11 +351,11 @@ static void ProcessDisplayData( int b )
 			            buf[n++] = b;
 		            } while (IsDataAvailable() && n < nBufLen);
 
-		            LCDText_WriteString(n, buf);
+		            text.WriteString(n, buf);
 		        }
 		        else
                 {
-                    LCDText_WriteChar(b);
+                    text.WriteChar(b);
                 }
 	        }
 	        break;
@@ -353,7 +372,7 @@ static void ProcessDisplayData( int b )
 			    else
 			    {
 	                buf.ReceiveBuffer[1] = b;
-			        LCD_BltData( buf.colour );
+			        lcd.WriteData( buf.colour );
 			        state = WAIT_FOR_BLT;
 			    }				
 	            WaitBytes--;
@@ -393,7 +412,7 @@ static void ProcessComms( void )
         //printf("Got %02X %c\n", c, isprint(c) ? c : '?');
         //usart_serial_putchar( &DEVICE_USART, c );
 	    ProcessDisplayData( c );
-	    //LCDText_WriteChar( c );
+	    //text.WriteChar( c );
     }
 }
 
@@ -401,7 +420,10 @@ static void ProcessComms( void )
 int main (void)
 {
     board_init();
-
+    lcd.Init();
+	lcd.SetBackgroundColour(RGB(0xFF,0Xff,0));
+	lcd.SetForegroundColour(RGB(0,0,0));
+	text.WriteString(17,"The rain in spain");
     //gpio_local_set_gpio_pin(LCD_BACKLIGHT_PWM);
     //gpio_local_clr_gpio_pin(LCD_BACKLIGHT_PWM);
     // Insert application code here, after the board has been initialized.
@@ -416,7 +438,7 @@ int main (void)
             //LCD_SolidRect(i,j,50,40);
         //}
     //}        
-    LCD_SetBacklight( 50 );
+    lcd.SetBacklight( 50 );
 	
     printf( "%s %s %d.%d\n", USB_DEVICE_PRODUCT_NAME, USB_DEVICE_MANUFACTURE_NAME, USB_DEVICE_MAJOR_VERSION, USB_DEVICE_MINOR_VERSION );
     serial_write_string( &DEVICE_USART, "USB Display\r\n" );
@@ -432,13 +454,13 @@ int main (void)
     //}		
 	
 	//gpio_enable_pin_interrupt( TOUCH_nPENIRQ, GPIO_FALLING_EDGE);
-	uint16_t x = 0;
-	uint8_t y = 0;
+//	uint16_t x = 0;
+//	uint8_t y = 0;
 	
 	// Force read for the first time to reset the touch controller
 	//touch_init_read();
 
-    int bLast=0;
+//    int bLast=0;
 	uint32_t oldrtc = AVR32_RTC.val;
     while (true)
     {
@@ -472,11 +494,11 @@ int main (void)
 		{
 			char s[30];
 			snprintf(s, sizeof(s), "%d,%d  %d ", touch_x, touch_y,n);
-			LCDText_SetTextCursor(0,0);
-			LCDText_WriteString(strlen(s),s);
+			text.SetTextCursor(0,0);
+			text.WriteString(strlen(s),s);
 			uint16_t x = (touch_y >> 6);
 			uint8_t y = SCREEN_HEIGHT - (touch_x >> 7);
-			LCD_DrawPixel( x, y );
+			lcd.DrawPixel( x, y );
 		}
 		//delay_ms(1);
         //extern int bytes_read;

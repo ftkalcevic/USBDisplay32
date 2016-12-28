@@ -146,7 +146,7 @@ static void serial_init(void)
     setup_tx_interrupt();
 }
 
-static void test()
+static void test(void)
 {
 	/* Insert system clock initialization code here (sysclk_init()). */
 	//sysclk_init();
@@ -241,7 +241,6 @@ void board_init(void)
 //	test();
     //InitUSB();
     InitBacklightPWM();
-    LCD_Init();
     touch_init();
     serial_init();
     
