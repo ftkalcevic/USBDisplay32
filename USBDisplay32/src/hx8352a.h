@@ -16,8 +16,8 @@
 #define REG_VerticalScrollTopFixedArea2				0x0f
 #define REG_VerticalScrollHeightArea1				0x10
 #define REG_VerticalScrollHeightArea2				0x11
-#define REG_VerticalScrollButtonFixed1				0x12
-#define REG_VerticalScrollButtonFixed2				0x13
+#define REG_VerticalScrollBottomFixed1				0x12
+#define REG_VerticalScrollBottomFixed2				0x13
 #define REG_VerticalScrollStartAddress1				0x14
 #define REG_VerticalScrollStartAddress2				0x15
 #define REG_MemoryAccessControl						0x16

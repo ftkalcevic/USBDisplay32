@@ -38,6 +38,7 @@ private:
 	uint32_t m_PixelX;
 	uint32_t m_PixelY;
 	bool m_bPixelCursor;
+	bool m_bAutoScroll;
 	struct SFontData *m_pFont;
 	struct SFontData *m_pFontData;
 
@@ -51,6 +52,7 @@ public:
 		m_bPixelCursor = false;
 		m_pFontData = fonts;
 		m_pFont = fonts;
+		m_bAutoScroll = false;
 
 		int f, i;
 		for ( f = 0; f < fontCount; f++ )
@@ -81,6 +83,10 @@ public:
 		m_pFont = m_pFontData + (fontId&1);	// currently only font 0 and 1
 	}
 
+	void SetAutoScroll(bool bAutoScroll)
+	{
+		m_bAutoScroll = bAutoScroll;
+	}
 
 	void DrawChar( uint16_t x, uint8_t y, char c )
 	{
@@ -169,7 +175,7 @@ public:
 					m_PixelX = 0;
 					m_PixelY += m_pFont->nCharHeight;
 					if (m_PixelY + m_pFont->nCharHeight > ScreenHeight)
-					m_PixelY = 0;
+						m_PixelY = 0;
 				}
 			}
 		}
@@ -186,19 +192,10 @@ public:
 				s++;
 				nLen--;
 
+				bool bNewLine = false;
 				if ( c == '\n')
 				{
-					m_TextX = 0;
-					x = 0;
-
-					m_TextY++;
-					if (m_TextY >= m_pFont->nLines)
-					{
-						m_TextY = 0; // for now, just wrap.  Maybe scroll later.
-						y = 0;
-					}
-					else
-					y += m_pFont->nCharHeight;
+					bNewLine = true;
 				}
 				else
 				{
@@ -207,20 +204,32 @@ public:
 					m_TextX++;
 					if (m_TextX >= m_pFont->nCharsPerLine)
 					{
-						m_TextX = 0;
-						x = 0;
+						bNewLine = true;
+					}
+					else
+						x += m_pFont->nCharWidth;
+				}
+				if ( bNewLine )
+				{
+					m_TextX = 0;
+					x = 0;
 
-						m_TextY++;
-						if (m_TextY >= m_pFont->nLines)
+					m_TextY++;
+					if (m_TextY >= m_pFont->nLines)
+					{
+						if ( m_bAutoScroll )
+						{
+							m_TextY--;
+							m_lcd.ScrollScreen(m_pFont->nCharHeight);
+						}
+						else
 						{
 							m_TextY = 0; // for now, just wrap.  Maybe scroll later.
 							y = 0;
 						}
-						else
-						y += m_pFont->nCharHeight;
 					}
 					else
-					x += m_pFont->nCharWidth;
+						y += m_pFont->nCharHeight;
 				}
 			}
 		}

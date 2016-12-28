@@ -223,7 +223,6 @@
       <Value>%24(PackRepoDir)\atmel\UC3A_DFP\1.0.53\include\AT32UC3A3256</Value>
     </ListValues>
   </avr32gcc.compiler.directories.IncludePaths>
-  <avr32gcc.compiler.optimization.level>Optimize most (-O3)</avr32gcc.compiler.optimization.level>
   <avr32gcc.compiler.optimization.OtherFlags>-fdata-sections</avr32gcc.compiler.optimization.OtherFlags>
   <avr32gcc.compiler.optimization.PrepareFunctionsForGarbageCollection>True</avr32gcc.compiler.optimization.PrepareFunctionsForGarbageCollection>
   <avr32gcc.compiler.optimization.UseAssemblerForPseudoInstructions>True</avr32gcc.compiler.optimization.UseAssemblerForPseudoInstructions>
@@ -276,7 +275,6 @@
       <Value>%24(PackRepoDir)\atmel\UC3A_DFP\1.0.53\include\AT32UC3A3256</Value>
     </ListValues>
   </avr32gcccpp.compiler.directories.IncludePaths>
-  <avr32gcccpp.compiler.optimization.level>Optimize most (-O3)</avr32gcccpp.compiler.optimization.level>
   <avr32gcccpp.compiler.optimization.PrepareFunctionsForGarbageCollection>True</avr32gcccpp.compiler.optimization.PrepareFunctionsForGarbageCollection>
   <avr32gcccpp.compiler.optimization.UseAssemblerForPseudoInstructions>True</avr32gcccpp.compiler.optimization.UseAssemblerForPseudoInstructions>
   <avr32gcccpp.compiler.optimization.DebugLevel>Maximum (-g3)</avr32gcccpp.compiler.optimization.DebugLevel>
@@ -622,6 +620,9 @@
       <SubType>compile</SubType>
       <Link>displaycommands.h</Link>
     </Compile>
+    <Compile Include="src\hx8352a.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\lcdhwiface.h">
       <SubType>compile</SubType>
       <Link>lcdhwiface.h</Link>
@@ -651,6 +652,9 @@
       <Link>lcd_conf.h</Link>
     </Compile>
     <Compile Include="src\main.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\r61509v.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\touch.c">

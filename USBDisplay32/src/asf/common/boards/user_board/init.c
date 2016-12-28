@@ -81,6 +81,14 @@ static void InitClocks( void )
 
 static void InitBacklightPWM( void )
 {
+#define NOPWM
+#ifdef NOPWM
+	gpio_enable_gpio_pin(LCD_BACKLIGHT_PWM);
+
+	// Set reset as an output, and pull low.
+	gpio_configure_pin(LCD_BACKLIGHT_PWM, GPIO_DIR_OUTPUT);
+	gpio_set_gpio_pin(LCD_BACKLIGHT_PWM);
+#else
     // Options for waveform generation.
     tc_waveform_opt_t waveform_opt =
     {
@@ -120,6 +128,7 @@ static void InitBacklightPWM( void )
 
     // Start the timers/counters.
     tc_start(&AVR32_TC0, 0);
+#endif
 }
 
 

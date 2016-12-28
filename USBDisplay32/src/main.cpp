@@ -40,8 +40,8 @@ static struct SFontData  fontData[] =
 };
 
 
-static LCDIFaceHX8352A<SCREEN_WIDTH,SCREEN_HEIGHT> lcd;
-static LCDText<LCDIFaceHX8352A<SCREEN_WIDTH,SCREEN_HEIGHT>, SCREEN_WIDTH, SCREEN_HEIGHT > text(lcd, fontData, countof(fontData) );
+static LCDIFace<LCDIFaceHX8352A<SCREEN_WIDTH,SCREEN_HEIGHT>,SCREEN_WIDTH,SCREEN_HEIGHT> lcd;
+static LCDText< LCDIFace<LCDIFaceHX8352A<SCREEN_WIDTH,SCREEN_HEIGHT>,SCREEN_WIDTH,SCREEN_HEIGHT>, SCREEN_WIDTH, SCREEN_HEIGHT > text(lcd, fontData, countof(fontData) );
 
 
 
@@ -70,29 +70,134 @@ int _write(int file, char *ptr, int len)
     return len;
 }
 
+
+static void DisplayTest(void)
+{
+	{
+		uint8_t y=10;
+		for ( uint16_t w = 1; w <= 10; w++ )
+		{
+			lcd.SetWindow( 10,y,10+w,y+w );
+			lcd.SetXY( 10,y );
+			lcd.GraphicsRamMode();
+			for (uint32_t i = 0; i < 100; i++)
+			{
+				lcd.WriteData(RGB(0xFF,0,0xFF));
+				delay_ms(1);
+			}
+			y+=w + 1;
+		}
+	}
+	//Command( REG_ColumnAddressStart1, 0 );
+	//Command( REG_ColumnAddressStart2, 0 );
+	//Command( REG_RowAddressStart1, 0 );
+	//Command( REG_RowAddressStart2, 0 );
+	lcd.GraphicsRamMode();
+	//for (uint32_t i = 0; i < 300040l; i++)
+	//{
+	//WriteData(RGB(0xFF,0xFF,0xFF));
+	//delay_ms(1);
+	//}
+	//for(;;){}
+	for (int i = 0; i < 240; i++)
+	{
+		lcd.SetXY(i,i);
+		lcd.GraphicsRamMode();
+		lcd.WriteData(RGB(0xFF,0xFF,0xFF));
+		delay_ms(5);
+	}
+	delay_ms(500);
+	for ( uint16_t i = 0; i < (1<<5); i++ )
+	lcd.ClearScreen(i & 1 ? RGB(127,0,0) : RGB(0,127,127) );
+
+	int x = 0;
+	int y = 0;
+	int width = 400;
+	int height = 240;
+	lcd.SetWindow(x,y,x+width-1,y+height-1);
+	lcd.SetXY(x,y);
+	lcd.GraphicsRamMode();
+
+	for ( int j = 0; j < width; j++ )
+	lcd.WriteData(RGB(0xFF,0xFF,0xFF));
+		
+	for ( int i = 0; i < height; i++ )
+	for ( int j = 0; j < width; j++ )
+	{
+		if ( i == j )
+		lcd.WriteData(RGB(0,0,0));
+		else
+		{
+			int c = 0;
+			int n = i > j ? 0xFF : i;
+			if ( i < 50 )
+			c = RGB(n,0,0);
+			else if ( i < 100 )
+			c = RGB(0,n,0);
+			else if ( i < 150 )
+			c = RGB(0,0,n);
+			else
+			c = RGB(0xFF,0xFF,0x80);
+			lcd.WriteData(c);
+		}
+		//delay_ms(1);
+	}
+		
+	delay_ms(500);
+	for ( uint16_t i = 0; i < (1<<5); i++ )
+	lcd.ClearScreen(i);
+
+	lcd.SetForegroundColour(RGB(0xFF,0,0));
+	lcd.SolidRect( 0, 0, 133, 239 );
+	lcd.SetForegroundColour(RGB(0,0xff,0));
+	lcd.SolidRect( 133, 0, 133, 239 );
+	lcd.SetForegroundColour(RGB(0,0,0xff));
+	lcd.SolidRect( 266, 0, 133, 239 );
+
+	lcd.SetForegroundColour(RGB(0,0xff,0));
+	lcd.SetBackgroundColour(RGB(0,0,0));
+
+	delay_ms(1000);
+}
+
+
+
 static void speedtest( void )
 {
     Set_sys_count(0);
-    for ( int i = 0; i < 1000; i++ )
+	int i;
+    //for ( i = 0; i < 1000; i++ )
     {
 	    lcd.ClearScreen(i);
     }
     int n = Get_sys_count();
     double t1 = ((double)n)/CLOCK;
 	
-    Set_sys_count(0);
+	lcd.SetForegroundColour(RGB(0,0xff,0));
+	lcd.SetBackgroundColour(RGB(0,0,0));
     const char *sTest = "The rain in spain falls mainly on the plain.";
     int nLen = strlen(sTest);
-    for ( int i = 0; i < 1000; i++ )
+    Set_sys_count(0);
+    //for ( int i = 0; i < 1000; i++ )
     {
 	    text.WriteString( nLen, sTest );
     }
     n = Get_sys_count();
     double t2 = ((double)n)/CLOCK;
 	
+	text.SetAutoScroll(true);
+    Set_sys_count(0);
+    for ( int i = 0; i < 50; i++ )
+    {
+	    text.WriteString( nLen, sTest );
+    }
+    n = Get_sys_count();
+    double t3 = ((double)n)/CLOCK;
+
     char s[100];
     lcd.ClearScreen(0);
-    sprintf(s,"Clear=%.3f, Text=%.3f", t1, t2 );
+    sprintf(s,"Clear=%.3f, Text=%.3f, Scroll=%.3f", t1, t2, t3 );
+    text.SetPixelCursor( SCREEN_WIDTH/2 - 7*strlen(s)/2, SCREEN_HEIGHT/2 );
     text.WriteString( strlen(s), s );
 }
 
@@ -421,6 +526,7 @@ int main (void)
 {
     board_init();
     lcd.Init();
+    lcd.SetBacklight( 399 );
 	lcd.SetBackgroundColour(RGB(0xFF,0Xff,0));
 	lcd.SetForegroundColour(RGB(0,0,0));
 	text.WriteString(17,"The rain in spain");

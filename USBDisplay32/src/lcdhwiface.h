@@ -212,11 +212,11 @@ class LCDHwIface
 	
 			AVR32_SMC.cs[0].PULSE.ncs_rd_pulse = 3;
 			AVR32_SMC.cs[0].PULSE.nrd_pulse = 2;
-			AVR32_SMC.cs[0].PULSE.ncs_wr_pulse = 2;
+			AVR32_SMC.cs[0].PULSE.ncs_wr_pulse = 1;
 			AVR32_SMC.cs[0].PULSE.nwe_pulse = 1;
 	
 			AVR32_SMC.cs[0].CYCLE.nrd_cycle = 2;
-			AVR32_SMC.cs[0].CYCLE.nwe_cycle = 4;
+			AVR32_SMC.cs[0].CYCLE.nwe_cycle = 3;
 	
 			AVR32_SMC.cs[0].MODE.ps = 0;		// Page Size - not using
 			AVR32_SMC.cs[0].MODE.pmen = 0;		// Page Mode Enabel = false
@@ -242,6 +242,11 @@ class LCDHwIface
 		static int ReadData(void)
 		{
 			return *LCD_DATA;
+		}
+
+		static int ReadCommand(void)
+		{
+			return *LCD_COMMAND;
 		}
  #endif
 
