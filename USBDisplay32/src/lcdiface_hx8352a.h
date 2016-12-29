@@ -138,13 +138,13 @@ public:
 		//Command(REG_VerticalScrollHeightArea2, nPixels );
 		//Command(REG_VerticalScrollStartAddress1, 0);
 		//Command(REG_VerticalScrollStartAddress2, nPixels);
-		//
+		
 		////WriteCommand(REG_MemoryAccessControl);
 		////uint8_t n = ReadCommand();
 		////n = ReadCommand();
 		////Command( REG_MemoryAccessControl, n | SRL_EN );
 		//Command( REG_MemoryAccessControl, MX | MV | GS | BGR | SS | SRL_EN );
-//
+
 		//return true; 
 		return false;
 	}

@@ -4,7 +4,7 @@
 //
 // Simple class to interface to the LCD hardware
 
-
+//#define  LCD_BITBANG_INTERFACE
 class LCDHwIface
 {
 #ifdef LCD_BITBANG_INTERFACE
@@ -112,7 +112,7 @@ class LCDHwIface
 		}
 
 	public:
-		static void InitIO(void)
+		static void LCDInitIO(void)
 		{
 			// Note - we don't use the gpio_local* functions as they require PB clock = CPU clock. (why can't we change PB clock?)
 			// Claim the IO pins
@@ -159,7 +159,7 @@ class LCDHwIface
 			WriteBus(cmd);
 		}
 
-		void WriteData(uint16_t data)//sent data
+		static void WriteData(uint16_t data)//sent data
 		{
 			gpio_set_gpio_pin(LCDRS);
 			WriteBus(data);
@@ -234,7 +234,7 @@ class LCDHwIface
 			*LCD_DATA = data;
 		}
 
-		static inline void WriteCommand(unsigned short cmd)
+		static inline void WriteCommand(uint16_t cmd)
 		{
 			*LCD_COMMAND = cmd;
 		}

@@ -10,14 +10,15 @@
 template<class TIFaceClass, int ScreenWidth, int ScreenHeight>
 class LCDIFace: public TIFaceClass
 {
+private:
 	uint16_t m_nBackgroundColour;
 	uint16_t m_nForegroundColour;
 
 public:
 	LCDIFace()
 	{
-		m_nBackgroundColour = RGB(0,0,0);
-		m_nForegroundColour = RGB(0xff,0xff,0xff);
+		m_nBackgroundColour = RGB(0,0,0) & 0xFFFE;
+		m_nForegroundColour = RGB(0xff,0xff,0xff) & 0xFFFE;
 	}
 
 public:
@@ -34,7 +35,7 @@ public:
 	void ClearScreen(uint16_t colour)
 	{
 		this->SetWindow(0,0,ScreenWidth-1,ScreenHeight-1);
-		this->SetXY(0,0);
+		//this->SetXY(0,0);
 		this->GraphicsRamMode();
 		for ( uint16_t j = 0; j < ScreenHeight * ScreenWidth / 128; j++ )	// Here we are assuming the display width*height is a multiple of 128
 		{
@@ -84,14 +85,14 @@ public:
 	void BltStart( int x, uint8_t y, int nWidth, uint8_t nHeight )
 	{
 		this->SetWindow(x, y, x+nWidth-1, y+nHeight-1);
-		this->SetXY( x, y );
+		//this->SetXY( x, y );
 		this->GraphicsRamMode();
 	}
 
 	void SolidRect( int x, uint8_t y, int nWidth, uint8_t nHeight )
 	{
 		this->SetWindow(x, y, x+nWidth-1, y+nHeight-1);
-		this->SetXY( x, y );
+		//this->SetXY( x, y );
 		this->GraphicsRamMode();
 	
 		unsigned int nBytesToWrite = (int)nHeight * (int)nWidth;
@@ -136,7 +137,7 @@ public:
 
 	void SetBackgroundColour( uint16_t colour )
 	{
-		m_nBackgroundColour = colour;
+		m_nBackgroundColour = colour & 0xFFFE;		// hack - for some reason, 0xFFFF causes text write to fail
 	}
 
 	uint16_t GetBackgroundColour( )
@@ -146,7 +147,7 @@ public:
 
 	void SetForegroundColour( uint16_t colour )
 	{
-		m_nForegroundColour = colour;
+		m_nForegroundColour = colour & 0xFFFE;		// hack - for some reason, 0xFFFF causes text write to fail
 	}
 
 	uint16_t GetForegroundColour()
@@ -156,8 +157,8 @@ public:
 
 	void DrawPixel( uint16_t x, uint8_t y )
 	{
-		//SetWindow( x, y, x, y );
-		this->SetXY( x, y );
+		this->SetWindow( x, y, x, y );
+		//this->SetXY( x, y );
 		this->GraphicsRamMode();
 		this->WriteData(m_nForegroundColour);
 	}

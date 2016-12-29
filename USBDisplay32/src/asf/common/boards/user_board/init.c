@@ -66,15 +66,26 @@ static void InitClocks( void )
 
     delay_init(CLOCK);
 	
+	//// Real time clock 
+	//while ( AVR32_RTC.CTRL.busy );
+	//AVR32_RTC.CTRL.clk32 = 0;
+	//while ( AVR32_RTC.CTRL.busy );
+	//AVR32_RTC.CTRL.psel = 10;	// ~ 56Hz
+	//while ( AVR32_RTC.CTRL.busy );
+	//AVR32_RTC.CTRL.clken = 1;
+	//while ( AVR32_RTC.CTRL.busy );
+	//AVR32_RTC.CTRL.en = 1;
+
 	// Real time clock 
 	while ( AVR32_RTC.CTRL.busy );
 	AVR32_RTC.CTRL.clk32 = 0;
 	while ( AVR32_RTC.CTRL.busy );
-	AVR32_RTC.CTRL.psel = 10;	// ~ 56Hz
+	AVR32_RTC.CTRL.psel = 15;	// 1.7Hz
 	while ( AVR32_RTC.CTRL.busy );
 	AVR32_RTC.CTRL.clken = 1;
 	while ( AVR32_RTC.CTRL.busy );
 	AVR32_RTC.CTRL.en = 1;
+
 }
 
 

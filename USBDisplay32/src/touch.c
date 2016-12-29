@@ -98,7 +98,6 @@ bool touch_complete()
 
 void touch_init( void )
 {
-return;
 	bTouchComplete = false;
 	bTouchBusy = false;
 	sysclk_enable_pba_module(SYSCLK_SPI1);
@@ -108,10 +107,10 @@ return;
     //gpio_local_set_gpio_pin(TOUCH_nCS);                  // always selected WRONG - CS used on SPI comms
     //
     gpio_enable_gpio_pin(TOUCH_BUSY);
-    gpio_local_disable_pin_output_driver(TOUCH_BUSY);
+    gpio_configure_pin(TOUCH_BUSY,GPIO_DIR_INPUT);
  
     gpio_enable_gpio_pin(TOUCH_nPENIRQ);
-    gpio_local_disable_pin_output_driver(TOUCH_nPENIRQ);
+    gpio_configure_pin(TOUCH_nPENIRQ,GPIO_DIR_INPUT);
 	//irq_register_handler(touch_gpio_interrupt, AVR32_GPIO_IRQ_0 + (TOUCH_nPENIRQ / AVR32_GPIO_IRQS_PER_GROUP), 0);
 	
 	// setup SPI to...

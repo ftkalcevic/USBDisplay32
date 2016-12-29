@@ -41,7 +41,7 @@ static struct SFontData  fontData[] =
 
 
 static LCDIFace<LCDIFaceHX8352A<SCREEN_WIDTH,SCREEN_HEIGHT>,SCREEN_WIDTH,SCREEN_HEIGHT> lcd;
-static LCDText< LCDIFace<LCDIFaceHX8352A<SCREEN_WIDTH,SCREEN_HEIGHT>,SCREEN_WIDTH,SCREEN_HEIGHT>, SCREEN_WIDTH, SCREEN_HEIGHT > text(lcd, fontData, countof(fontData) );
+static LCDText< LCDIFace<LCDIFaceHX8352A<SCREEN_WIDTH,SCREEN_HEIGHT>,SCREEN_WIDTH,SCREEN_HEIGHT>, SCREEN_WIDTH, SCREEN_HEIGHT > lcdtext(lcd, fontData, countof(fontData) );
 
 
 
@@ -66,7 +66,7 @@ static inline unsigned short SwapBytes( unsigned short n )
 extern int _write(int file, char *ptr, int len);
 int _write(int file, char *ptr, int len)
 {
-    text.WriteString( len, ptr );
+	lcdtext.WriteString( len, ptr );
     return len;
 }
 
@@ -166,40 +166,45 @@ static void speedtest( void )
 {
     Set_sys_count(0);
 	int i;
-    //for ( i = 0; i < 1000; i++ )
+    for ( i = 0; i < 100; i++ )
     {
 	    lcd.ClearScreen(i);
     }
     int n = Get_sys_count();
     double t1 = ((double)n)/CLOCK;
 	
-	lcd.SetForegroundColour(RGB(0,0xff,0));
 	lcd.SetBackgroundColour(RGB(0,0,0));
+	lcd.SetForegroundColour(RGB(0,0xff,0));
     const char *sTest = "The rain in spain falls mainly on the plain.";
-    int nLen = strlen(sTest);
     Set_sys_count(0);
-    //for ( int i = 0; i < 1000; i++ )
+    for ( int i = 0; i < 1000; i++ )
     {
-	    text.WriteString( nLen, sTest );
+		lcd.SetBackgroundColour( (i&3) == 1 ? RGB(0xFF,0xFF,0xFF) : (i&3) == 2 ? RGB(0xFF,0,0) : (i&3) == 3 ? RGB(0,0xFF,0) : RGB(0,0,0xFF) );
+		lcd.SetForegroundColour( (i&3) == 0 ? RGB(0xFF,0xFF,0xFF) : (i&3) == 1 ? RGB(0xFF,0,0) : (i&3) == 2 ? RGB(0,0xFF,0) : RGB(0,0,0xFF) );
+	    lcdtext.WriteString( sTest );
     }
     n = Get_sys_count();
     double t2 = ((double)n)/CLOCK;
 	
-	text.SetAutoScroll(true);
+	lcdtext.SetAutoScroll(true);
     Set_sys_count(0);
-    for ( int i = 0; i < 50; i++ )
+    for ( int i = 0; i < 100; i++ )
     {
-	    text.WriteString( nLen, sTest );
+	    lcdtext.WriteString( sTest );
+		lcd.SetForegroundColour( (i&3) == 0 ? RGB(0xFF,0xFF,0xFF) : (i&3) == 1 ? RGB(0xFF,0,0) : (i&3) == 2 ? RGB(0,0xFF,0) : RGB(0,0,0xFF) );
     }
     n = Get_sys_count();
     double t3 = ((double)n)/CLOCK;
 
     char s[100];
     lcd.ClearScreen(0);
-    sprintf(s,"Clear=%.3f, Text=%.3f, Scroll=%.3f", t1, t2, t3 );
-    text.SetPixelCursor( SCREEN_WIDTH/2 - 7*strlen(s)/2, SCREEN_HEIGHT/2 );
-    text.WriteString( strlen(s), s );
+    snprintf(s,sizeof(s),"Clear=%.3f, Text=%.3f, Scroll=%.3f", t1, t2, t3 );
+	s[sizeof(s)-1] = 0;
+    lcdtext.SetPixelCursor( SCREEN_WIDTH/2 - 7*strlen(s)/2, SCREEN_HEIGHT/2 );
+    lcdtext.WriteString( s );
+	delay_ms(10000);
 }
+
 
 //#define MAIN_BUFFER
 #ifdef MAIN_BUFFER
@@ -371,17 +376,17 @@ static void ProcessDisplayData( int b )
 			            break;
 						
 		            case CMD_SET_TEXT_POSITION: // Set position 0x04, x, y
-			            text.SetTextCursor( buf.cmd.tpos.x, buf.cmd.tpos.y );
+			            lcdtext.SetTextCursor( buf.cmd.tpos.x, buf.cmd.tpos.y );
 		                state = WAIT_FOR_COMMAND;
 			            break;
 						
 		            case CMD_SET_GRAPHICS_POSITION: // Set position 0x0?, xlsb, xmsb, y
-			            text.SetPixelCursor( buf.cmd.gpos.x, buf.cmd.gpos.y );
+			            lcdtext.SetPixelCursor( buf.cmd.gpos.x, buf.cmd.gpos.y );
 		                state = WAIT_FOR_COMMAND;
 			            break;
 						
 		            case CMD_SET_FONT: // Set font? 0x05, 0/1
-			            text.SetFont( buf.cmd.font.font );
+			            lcdtext.SetFont( buf.cmd.font.font );
 		                state = WAIT_FOR_COMMAND;
 			            break;
 						
@@ -456,11 +461,11 @@ static void ProcessDisplayData( int b )
 			            buf[n++] = b;
 		            } while (IsDataAvailable() && n < nBufLen);
 
-		            text.WriteString(n, buf);
+		            lcdtext.WriteString(n, buf);
 		        }
 		        else
                 {
-                    text.WriteChar(b);
+                    lcdtext.WriteChar(b);
                 }
 	        }
 	        break;
@@ -522,49 +527,139 @@ static void ProcessComms( void )
 }
 
 
+static void DisplayStartupMsg()
+{
+	lcdtext.SetAutoScroll(false);
+	lcdtext.SetTextCursor(1,1);	
+	char s[200];
+	snprintf( s, sizeof(s), "%s %s %d.%d\n", USB_DEVICE_PRODUCT_NAME, USB_DEVICE_MANUFACTURE_NAME, USB_DEVICE_MAJOR_VERSION, USB_DEVICE_MINOR_VERSION );
+	s[sizeof(s)-1] = '\0';
+	lcdtext.WriteString( s );
+	serial_write_string( &DEVICE_USART, s );
+}
+
+static void speedtest2( void )
+{
+	lcd.ClearScreen(0);
+	lcdtext.SetTextCursor(0,0);
+	//lcdtext.WriteString( "This is another test" );
+	//lcd.SetBackgroundColour(RGB(0,0,0));
+	//lcd.SetForegroundColour(RGB(0xFF,0xFF,0xFF));
+	//lcdtext.WriteString( "This is another test" );
+	//lcd.SetBackgroundColour(RGB(0xFF,0xFF,0xFF));
+	//lcd.SetForegroundColour(RGB(0,0,0));
+	//lcdtext.WriteString( "This is another test" );
+	//lcd.SetBackgroundColour(RGB(0xFF,0,0));
+	//lcd.SetForegroundColour(RGB(0,0xFF,0xFF));
+	//lcdtext.WriteString( "This is another test" );
+	//lcd.SetBackgroundColour(RGB(0,0xFF,0xFF));
+	//lcd.SetForegroundColour(RGB(0xFF,0,0));
+	//lcdtext.WriteString( "This is another test" );
+
+	char s[100];
+	//Set_sys_count(0);
+	int i;
+	//for ( i = 0; i < 1000; i++ )
+	//{
+	//lcd.ClearScreen(i);
+	//}
+	int n = 0;//Get_sys_count();
+	double t1 = 0;// ((double)n)/CLOCK;
+	
+	lcd.SetBackgroundColour(RGB(0,0,0));
+	lcd.SetForegroundColour(RGB(0,0xff,0));
+	const char *sTest = "The rain in spain falls mainly on the plain.";
+	Set_sys_count(0);
+	for ( int i = 0; i < 50; i++ )
+	{
+		lcd.SetForegroundColour( (i&3) == 0 ? RGB(0xFF,0xFF,0xFF) : (i&3) == 1 ? RGB(0xFF,0,0) : (i&3) == 2 ? RGB(0,0xFF,0) : RGB(0,0,0xFF) );
+		lcdtext.WriteString( sTest );
+	}
+	n = 0;//Get_sys_count();
+	double t2 = 0;//((double)n)/CLOCK;
+	
+	//text.SetAutoScroll(true);
+	//Set_sys_count(0);
+	//for ( int i = 0; i < 100; i++ )
+	//{
+	//text.WriteString( sTest );
+	//}
+	n = 0;//Get_sys_count();
+	double t3 = 0;//((double)n)/CLOCK;
+
+	lcd.ClearScreen(0);
+	lcdtext.WriteString( "This is another test" );
+	lcd.SetBackgroundColour(RGB(0,0,0));
+	lcdtext.WriteString( "This is another test" );
+	lcd.SolidRect(200,100,50,50);
+	lcd.SetForegroundColour(RGB(0xFF,0xFF,0xFF));
+	lcd.SolidRect(250,100,50,50);
+	lcdtext.WriteString( "This is another test" );
+	snprintf(s,sizeof(s),"Clear=%.3f, Text=%.3f, Scroll=%.3f", t1, t2, t3 );
+	s[sizeof(s)-1] = 0;
+	lcdtext.SetPixelCursor( SCREEN_WIDTH/2 - 7*strlen(s)/2, SCREEN_HEIGHT/2 );
+	lcdtext.WriteString( s );
+	lcdtext.WriteString( "This is another test" );
+	delay_ms(1000);
+
+	{
+		lcd.ClearScreen(RGB(0,0xff,0));
+		lcd.SetForegroundColour(RGB(0,0,0));
+		lcd.SetBackgroundColour(RGB(0xFF,0xFF,0xFF));
+
+		lcdtext.SetAutoScroll(false);
+		lcdtext.SetTextCursor(1,1);
+		//char s[200];
+		snprintf( s, sizeof(s), "%s %s %d.%d\n", USB_DEVICE_PRODUCT_NAME, USB_DEVICE_MANUFACTURE_NAME, USB_DEVICE_MAJOR_VERSION, USB_DEVICE_MINOR_VERSION );
+		s[sizeof(s)-1] = '\0';
+		for ( int i = 0; i < 5; i++ )
+		{
+			lcdtext.WriteString( s );
+			delay_ms(1000);
+		}
+		delay_ms(10000);
+	}
+	lcd.ClearScreen(RGB(0,0xff,0));
+	lcd.SetForegroundColour(RGB(0xFF,0xFF,0xFF));
+	lcd.SetBackgroundColour(RGB(0,0,0));
+
+	DisplayStartupMsg();
+}
+
+
 int main (void)
 {
     board_init();
     lcd.Init();
-    lcd.SetBacklight( 399 );
-	lcd.SetBackgroundColour(RGB(0xFF,0Xff,0));
-	lcd.SetForegroundColour(RGB(0,0,0));
-	text.WriteString(17,"The rain in spain");
-    //gpio_local_set_gpio_pin(LCD_BACKLIGHT_PWM);
-    //gpio_local_clr_gpio_pin(LCD_BACKLIGHT_PWM);
-    // Insert application code here, after the board has been initialized.
 	
-     speedtest();
-    
-    //for ( int i = 0; i < 400; i+= 50 )
-    //{
-        //for ( int j = 0; j <240; j += 40 )
-        //{
-            //LCD_SetForegroundColour( ((i/50)^(j/40))&1?RGB(255,255,255):RGB(0,0,0));
-            //LCD_SolidRect(i,j,50,40);
-        //}
-    //}        
-    lcd.SetBacklight( 50 );
-	
-    printf( "%s %s %d.%d\n", USB_DEVICE_PRODUCT_NAME, USB_DEVICE_MANUFACTURE_NAME, USB_DEVICE_MAJOR_VERSION, USB_DEVICE_MINOR_VERSION );
-    serial_write_string( &DEVICE_USART, "USB Display\r\n" );
+    //speedtest();
 
-    //printf( "The rain in spain\n" );
-    //for ( int i = 0; i < 20; i++ )
-    //{
-        //for ( int j = 0; j < i; j++ )
-        //{
-            //printf("%c", 'A' + j );
-        //}
-        //printf("\n");
-    //}		
+    //lcd.SetBacklight( 100 );
+	//lcd.ClearScreen(RGB(0,0,0));
+	lcd.ClearScreen(0);
+	//lcd.SetForegroundColour(RGB(0x7F,0x7F,0x7F));
+	lcd.SetForegroundColour(0b1111111111111111);
+	for ( int i = 0; i < 200; i++ )
+	{
+		lcd.DrawPixel( i, i );
+		delay_ms(5);
+	}
+
+	//lcd.SetBackgroundColour(RGB(0x0,0x0,0x0));
+	lcd.SetForegroundColour(0x0);
+	lcd.SetBackgroundColour(0b1111111111111111);
+	lcdtext.SetTextCursor(0,0);
+	lcdtext.WriteChar('X');
+
+	DisplayStartupMsg();
+
 	
 	//gpio_enable_pin_interrupt( TOUCH_nPENIRQ, GPIO_FALLING_EDGE);
-//	uint16_t x = 0;
-//	uint8_t y = 0;
+	uint16_t x = 0;
+	uint8_t y = 0;
 	
 	// Force read for the first time to reset the touch controller
-	//touch_init_read();
+	touch_init_read();
 
 //    int bLast=0;
 	uint32_t oldrtc = AVR32_RTC.val;
@@ -595,13 +690,15 @@ int main (void)
 					n = 0;
 				}
 			}
+			lcdtext.WriteString("Tick");
 		}
 		if ( touch_complete() )
 		{
-			char s[30];
-			snprintf(s, sizeof(s), "%d,%d  %d ", touch_x, touch_y,n);
-			text.SetTextCursor(0,0);
-			text.WriteString(strlen(s),s);
+			char s[50];
+			snprintf(s, sizeof(s), "%d,%d  %d           ", touch_x, touch_y,n);
+			s[sizeof(s)-1]=0;
+			lcdtext.SetTextCursor(0,0);
+			lcdtext.WriteString(s);
 			uint16_t x = (touch_y >> 6);
 			uint8_t y = SCREEN_HEIGHT - (touch_x >> 7);
 			lcd.DrawPixel( x, y );

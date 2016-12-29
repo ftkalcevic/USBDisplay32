@@ -91,7 +91,7 @@ public:
 	void DrawChar( uint16_t x, uint8_t y, char c )
 	{
 		m_lcd.SetWindow( x, y, x+m_pFont->nCharWidth-1, y+m_pFont->nCharHeight-1 );
-		m_lcd.SetXY( x, y );
+		//m_lcd.SetXY( x, y );
 		m_lcd.GraphicsRamMode();
 
 		uint8_t nColMask = 7;
@@ -158,15 +158,14 @@ public:
 	}
 
 	// Writing a string is a bit faster, especially in text cursor mode (no need to multiply the coordinates)
-	void WriteString( uint8_t nLen, const char *s )
+	void WriteString( const char *s )
 	{
 		if (m_bPixelCursor)
 		{
-			while (nLen)
+			char c;
+			while ( (c = *(s++)) != '\0' )
 			{
-				DrawChar(m_PixelX, m_PixelY, *s);
-				s++;
-				nLen--;
+				DrawChar(m_PixelX, m_PixelY, c);
 
 				m_PixelX += m_pFont->nCharWidth;
 
@@ -186,11 +185,9 @@ public:
 			uint32_t x = m_TextX;
 			x *= m_pFont->nCharWidth;
 
-			while (nLen)
+			char c;
+			while ( (c = *(s++)) != '\0' )
 			{
-				char c = *s;
-				s++;
-				nLen--;
 
 				bool bNewLine = false;
 				if ( c == '\n')
@@ -234,6 +231,15 @@ public:
 			}
 		}
 	}
+
+	void WriteString( uint16_t nLen, const char *s )
+	{
+		while ( nLen-- )
+		{
+			WriteChar( *s++ );
+		}
+	}
+
 };
 
 #endif /* _LCDTEXT_H_ */
