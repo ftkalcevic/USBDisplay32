@@ -233,6 +233,7 @@
       <Value>%24(PackRepoDir)\atmel\UC3A_DFP\1.0.53\include\AT32UC3A3256</Value>
     </ListValues>
   </avr32gcc.compiler.directories.IncludePaths>
+  <avr32gcc.compiler.optimization.level>Optimize most (-O3)</avr32gcc.compiler.optimization.level>
   <avr32gcc.compiler.optimization.OtherFlags>-fdata-sections</avr32gcc.compiler.optimization.OtherFlags>
   <avr32gcc.compiler.optimization.PrepareFunctionsForGarbageCollection>True</avr32gcc.compiler.optimization.PrepareFunctionsForGarbageCollection>
   <avr32gcc.compiler.optimization.UseAssemblerForPseudoInstructions>True</avr32gcc.compiler.optimization.UseAssemblerForPseudoInstructions>
@@ -285,6 +286,7 @@
       <Value>%24(PackRepoDir)\atmel\UC3A_DFP\1.0.53\include\AT32UC3A3256</Value>
     </ListValues>
   </avr32gcccpp.compiler.directories.IncludePaths>
+  <avr32gcccpp.compiler.optimization.level>Optimize most (-O3)</avr32gcccpp.compiler.optimization.level>
   <avr32gcccpp.compiler.optimization.PrepareFunctionsForGarbageCollection>True</avr32gcccpp.compiler.optimization.PrepareFunctionsForGarbageCollection>
   <avr32gcccpp.compiler.optimization.PrepareDataForGarbageCollection>True</avr32gcccpp.compiler.optimization.PrepareDataForGarbageCollection>
   <avr32gcccpp.compiler.optimization.UseAssemblerForPseudoInstructions>True</avr32gcccpp.compiler.optimization.UseAssemblerForPseudoInstructions>
@@ -435,15 +437,6 @@
     <Compile Include="src\asf\avr32\utils\preprocessor\tpaste.h">
       <SubType>compile</SubType>
     </Compile>
-    <None Include="src\asf\avr32\utils\startup\startup_uc3.S">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\asf\avr32\utils\startup\trampoline_uc3.S">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="src\asf\avr32\utils\startup\trampoline_uc3.h">
-      <SubType>compile</SubType>
-    </None>
     <Compile Include="src\asf\avr32\utils\status_codes.h">
       <SubType>compile</SubType>
     </Compile>
@@ -652,6 +645,10 @@
       <SubType>compile</SubType>
       <Link>lcdiface_hx8352a.h</Link>
     </Compile>
+    <Compile Include="src\lcdiface_ssd1963.h">
+      <SubType>compile</SubType>
+      <Link>lcdiface_ssd1963.h</Link>
+    </Compile>
     <Compile Include="src\lcdtext.h">
       <SubType>compile</SubType>
     </Compile>
@@ -664,6 +661,10 @@
     </Compile>
     <Compile Include="src\r61509v.h">
       <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\ssd1963.h">
+      <SubType>compile</SubType>
+      <Link>ssd1963.h</Link>
     </Compile>
     <Compile Include="src\touch.c">
       <SubType>compile</SubType>

@@ -25,6 +25,7 @@
 #include "lcd_conf.h"
 
 #include "lcdiface_hx8352a.h"
+#include "lcdiface_ssd1963.h"
 #include "lcdtext.h"
 
 #define USE_USB_CDC
@@ -40,8 +41,8 @@ static struct SFontData  fontData[] =
 };
 
 
-static LCDIFace<LCDIFaceHX8352A<SCREEN_WIDTH,SCREEN_HEIGHT>,SCREEN_WIDTH,SCREEN_HEIGHT> lcd;
-static LCDText< LCDIFace<LCDIFaceHX8352A<SCREEN_WIDTH,SCREEN_HEIGHT>,SCREEN_WIDTH,SCREEN_HEIGHT>, SCREEN_WIDTH, SCREEN_HEIGHT > lcdtext(lcd, fontData, countof(fontData) );
+static TLCD lcd;
+static TLCDText lcdtext(lcd, fontData, countof(fontData) );
 
 
 
@@ -78,7 +79,7 @@ static void DisplayTest(void)
 		for ( uint16_t w = 1; w <= 10; w++ )
 		{
 			lcd.SetWindow( 10,y,10+w,y+w );
-			lcd.SetXY( 10,y );
+			//lcd.SetXY( 10,y );
 			lcd.GraphicsRamMode();
 			for (uint32_t i = 0; i < 100; i++)
 			{
@@ -86,6 +87,18 @@ static void DisplayTest(void)
 				delay_ms(1);
 			}
 			y+=w + 1;
+		}
+	}
+	{
+		for ( uint32_t w = 271; w >= 1; w-- )
+		{
+			lcd.SetWindow( 0,0,w,w );
+			lcd.GraphicsRamMode();
+			for (uint32_t i = 0; i < w*w; i++)
+			{
+				lcd.WriteData(w & 1 ? RGB(0xFF,0,0) : RGB(0,0xFF,0) );
+			}
+			//delay_ms(500);
 		}
 	}
 	//Command( REG_ColumnAddressStart1, 0 );
@@ -166,7 +179,7 @@ static void speedtest( void )
 {
     Set_sys_count(0);
 	int i;
-    for ( i = 0; i < 100; i++ )
+    for ( i = 0; i < 1000; i++ )
     {
 	    lcd.ClearScreen(i);
     }
@@ -530,7 +543,7 @@ static void ProcessComms( void )
 static void DisplayStartupMsg()
 {
 	lcdtext.SetAutoScroll(false);
-	lcdtext.SetTextCursor(1,1);	
+	lcdtext.SetTextCursor(0,0);	
 	char s[200];
 	snprintf( s, sizeof(s), "%s %s %d.%d\n", USB_DEVICE_PRODUCT_NAME, USB_DEVICE_MANUFACTURE_NAME, USB_DEVICE_MAJOR_VERSION, USB_DEVICE_MINOR_VERSION );
 	s[sizeof(s)-1] = '\0';
@@ -632,24 +645,13 @@ int main (void)
     board_init();
     lcd.Init();
 	
+	//DisplayTest();
     //speedtest();
 
     //lcd.SetBacklight( 100 );
 	//lcd.ClearScreen(RGB(0,0,0));
 	lcd.ClearScreen(0);
 	//lcd.SetForegroundColour(RGB(0x7F,0x7F,0x7F));
-	lcd.SetForegroundColour(0b1111111111111111);
-	for ( int i = 0; i < 200; i++ )
-	{
-		lcd.DrawPixel( i, i );
-		delay_ms(5);
-	}
-
-	//lcd.SetBackgroundColour(RGB(0x0,0x0,0x0));
-	lcd.SetForegroundColour(0x0);
-	lcd.SetBackgroundColour(0b1111111111111111);
-	lcdtext.SetTextCursor(0,0);
-	lcdtext.WriteChar('X');
 
 	DisplayStartupMsg();
 
@@ -690,14 +692,14 @@ int main (void)
 					n = 0;
 				}
 			}
-			lcdtext.WriteString("Tick");
+			lcdtext.WriteString("Tick ");
 		}
 		if ( touch_complete() )
 		{
 			char s[50];
 			snprintf(s, sizeof(s), "%d,%d  %d           ", touch_x, touch_y,n);
 			s[sizeof(s)-1]=0;
-			lcdtext.SetTextCursor(0,0);
+			lcdtext.SetTextCursor(0,1);
 			lcdtext.WriteString(s);
 			uint16_t x = (touch_y >> 6);
 			uint8_t y = SCREEN_HEIGHT - (touch_x >> 7);

@@ -46,50 +46,50 @@ public:
 
 	void ScrollScreen(uint16_t nPixels, bool bErase = true)
 	{
-		if ( TIFaceClass::ScrollScreen(nPixels) )	// A bit of hack to avoid using virtual functions (slight performance gain).
-			return;
-
-		this->SetWindow(0,0,ScreenWidth-1,ScreenHeight-1);
-		// Scrolling the whole screen nPixels
-		for ( uint16_t r = nPixels; r < ScreenHeight; r++)
+		if ( !TIFaceClass::ScrollScreen(nPixels) )	// A bit of hack to avoid using virtual functions (slight performance gain).
 		{
-			uint16_t source_row = r;
-			uint16_t dest_row = r - nPixels;
-			uint16_t row[ScreenWidth];
-			this->SetXY(0,source_row);
-			for ( uint16_t c = 0; c < ScreenWidth; c++ )
+			this->SetWindow(0,0,ScreenWidth-1,ScreenHeight-1);
+			// Scrolling the whole screen nPixels
+			for ( uint16_t r = nPixels; r < ScreenHeight; r++)
 			{
-				this->SetX(c);
-				this->GraphicsRamMode();
-				uint16_t temp = this->ReadData();
-				temp = this->ReadData();
-				row[c] = temp;
-			}
+				uint16_t source_row = r;
+				uint16_t dest_row = r - nPixels;
+				uint16_t row[ScreenWidth];
+				this->SetXY(0,source_row);
+				for ( uint16_t c = 0; c < ScreenWidth; c++ )
+				{
+					this->SetX(c);
+					this->GraphicsRamMode();
+					uint16_t temp = this->ReadData();
+					temp = this->ReadData();
+					row[c] = temp;
+				}
 		
-			this->SetXY(0,dest_row);
-			this->GraphicsRamMode();
-			for ( uint16_t c = 0; c < ScreenWidth; c++ )
-			{
-				this->WriteData( row[c] );
+				this->SetXY(0,dest_row);
+				this->GraphicsRamMode();
+				for ( uint16_t c = 0; c < ScreenWidth; c++ )
+				{
+					this->WriteData( row[c] );
+				}
 			}
 		}
 		if ( bErase )
 		{
 			uint16_t nOldForeColour = GetForegroundColour();
 			SetForegroundColour( GetBackgroundColour() );
-			SolidRect(0,ScreenHeight-1-nPixels, ScreenWidth-1,ScreenHeight-1);
+			SolidRect(0,ScreenHeight-1-nPixels, ScreenWidth,nPixels);
 			SetForegroundColour( nOldForeColour );
 		}
 	}
 
-	void BltStart( int x, uint8_t y, int nWidth, uint8_t nHeight )
+	void BltStart( uint16_t x, uint16_t y, uint16_t nWidth, uint16_t nHeight )
 	{
 		this->SetWindow(x, y, x+nWidth-1, y+nHeight-1);
 		//this->SetXY( x, y );
 		this->GraphicsRamMode();
 	}
 
-	void SolidRect( int x, uint8_t y, int nWidth, uint8_t nHeight )
+	void SolidRect( uint16_t x, uint16_t y, uint16_t nWidth, uint16_t nHeight )
 	{
 		this->SetWindow(x, y, x+nWidth-1, y+nHeight-1);
 		//this->SetXY( x, y );
@@ -99,18 +99,18 @@ public:
 		unsigned int nBlocksToWrite = nBytesToWrite / 128;
 		unsigned int nRemainderBytes = nBytesToWrite % 128;
 	
-		for ( unsigned int i = 0; i < nBlocksToWrite; i++ )
+		for ( uint16_t i = 0; i < nBlocksToWrite; i++ )
 		{
 			REPEAT_COMMAND128(this->WriteData(m_nForegroundColour));		// Unroll 128 iterations
 		}
 
-		for ( unsigned int i = 0; i < nRemainderBytes; i++ )
+		for ( uint16_t i = 0; i < nRemainderBytes; i++ )
 		{
 			this->WriteData(m_nForegroundColour);
 		}
 	}
 
-	void Rect( int x, uint8_t y, int nWidth, uint8_t nHeight )
+	void Rect( uint16_t x, uint16_t y, uint16_t nWidth, uint16_t nHeight )
 	{
 		if ( nHeight <= 1 )	// Horizontal Line
 		{
@@ -155,7 +155,7 @@ public:
 		return m_nForegroundColour;
 	}
 
-	void DrawPixel( uint16_t x, uint8_t y )
+	void DrawPixel( uint16_t x, uint16_t y )
 	{
 		this->SetWindow( x, y, x, y );
 		//this->SetXY( x, y );
