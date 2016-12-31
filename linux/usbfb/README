@@ -1,0 +1,13 @@
+Instuctions from http://mulchman.org/blog/?tag=displaylink
+
+
+* sudo apt-get install libusb-dev xorg-dev build-essential
+* wget http://projects.unbit.it/downloads/udlfb-0.2.3_and_xf86-video-displaylink-0.3.tar.gz
+* tar xzvf udlfb-0.2.3_and_xf86-video-displaylink-0.3.tar.gz
+* get usbfb
+* cd usbfb
+* make && sudo make install && sudo depmod -a
+* cd ../xf86-video-displaylink
+* ./configure && make && sudo make install
+* edit /etc/X11/xorg.conf
+

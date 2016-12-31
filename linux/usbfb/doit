@@ -1,0 +1,5 @@
+sudo rmmod usbfb 
+make
+sudo make install
+sudo depmod -a
+sudo modprobe usbfb 

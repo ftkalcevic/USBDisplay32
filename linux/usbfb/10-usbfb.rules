@@ -1,0 +1,4 @@
+# Frank's workshop USBDisplay32 - Set device to /dev/fb_usbdisplay32
+SUBSYSTEM=="graphics",ATTRS{idVendor}=="1c40", ATTRS{idProduct}=="04dc", SYMLINK+="fb_usbdisplay32"
+
+
