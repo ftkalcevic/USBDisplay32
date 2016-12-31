@@ -1,6 +1,4 @@
-#ifndef _LCD_CONF_H_
-#define _LCD_CONF_H_
-
+#pragma  once
 
 //#define ITDB02_32WD
 #define ITDB02_43
@@ -29,6 +27,13 @@
 
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
+	extern void LCD_BltStart( uint16_t x, uint16_t y, uint16_t nWidth, uint16_t nHeight );
+	extern void LCD_SetBacklight( uint8_t intenstity );
 
+#ifdef __cplusplus
+}
 #endif

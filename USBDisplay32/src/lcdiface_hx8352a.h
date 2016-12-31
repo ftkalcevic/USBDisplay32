@@ -148,4 +148,7 @@ public:
 		//return true; 
 		return false;
 	}
+
+	bool SetBacklight(uint8_t intensity) { return false; }	// A bit of hack to avoid using virtual functions (slight performance gain).
+
 };

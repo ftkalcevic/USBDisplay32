@@ -8,7 +8,6 @@
 #include <board.h>
 #include <conf_board.h>
 #include "asf.h"
-#include "lcdif.h"
 #include "sleepmgr.h"
 #include "sysclk.h"
 #include "udc.h"
@@ -259,9 +258,9 @@ void board_init(void)
     InitClocks();
     InitGPIOs();
 //	test();
-    //InitUSB();
     InitBacklightPWM();
     touch_init();
     serial_init();
+    InitUSB();
     
 }
