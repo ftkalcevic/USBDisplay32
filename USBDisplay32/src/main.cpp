@@ -17,7 +17,6 @@
 #include <ctype.h>
 
 #include "common.h"
-#include "lcdif.h"
 #include "lcdtext.h"
 #include "displaycommands.h"
 #include "serial.h"
@@ -41,9 +40,18 @@ static struct SFontData  fontData[] =
 };
 
 
-static TLCD lcd;
-static TLCDText lcdtext(lcd, fontData, countof(fontData) );
+TLCD lcd;
+TLCDText lcdtext(lcd, fontData, countof(fontData) );
 
+
+extern "C" void LCD_BltStart( uint16_t x, uint16_t y, uint16_t nWidth, uint16_t nHeight )
+{
+	lcd.BltStart(x,y,nWidth,nHeight);
+}
+extern "C" void LCD_SetBacklight( uint8_t intenstity )
+{
+	lcd.SetBacklight( intenstity );
+}
 
 
 static void serial_write_string( volatile avr32_usart_t *usart, const char *s )
@@ -667,15 +675,15 @@ int main (void)
 	uint32_t oldrtc = AVR32_RTC.val;
     while (true)
     {
-        //avr32_usbb_t *usb = &AVR32_USBB;
-	//int byte_count = usb->UESTA2.byct;
-	//int status = usb->uesta2;
-	//int rxouti = usb->UESTA2.rxouti;
-	//int rwall = usb->UESTA2.rwall;
-	//int fifocon = usb->UECON2.fifocon;
-	//int rxoute = usb->UECON2.rxoute;
-	//int hs = udd_is_high_speed();
-	//
+        volatile avr32_usbb_t *usb = &AVR32_USBB;
+		int byte_count = usb->UESTA2.byct;
+		int status = usb->uesta2;
+		int rxouti = usb->UESTA2.rxouti;
+		int rwall = usb->UESTA2.rwall;
+		int fifocon = usb->UECON2.fifocon;
+		int rxoute = usb->UECON2.rxoute;
+		int hs = udd_is_high_speed();
+	
         ProcessComms();
 
 		static uint16_t n = 0;

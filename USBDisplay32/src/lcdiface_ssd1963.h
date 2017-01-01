@@ -89,13 +89,7 @@ protected:
 	//	SetXY(0, 0, 479, 271);
 		DisplayOn(true);
 
-		WriteCommand(REG_SET_PWM_CONF);		//set PWM for B/L
-		WriteData(0x06);
-		WriteData(0xf0);
-		WriteData(0x01);
-		WriteData(0xf0);
-		WriteData(0x00);
-		WriteData(0x00);
+		SetBacklight( 30 );
 
 		WriteCommand(REG_SET_DBC_CONF);
 		WriteData(0x0d);
@@ -157,6 +151,7 @@ public:
 	bool ScrollScreen(uint16_t nPixels) 
 	{ 
 		return false;
+		// ? Does this actually scroll?  Or just change the display memory start address?
 		WriteCommand(REG_SET_SCROLL_AREA);
 		WriteData(0);	// TFA MSB
 		WriteData(0);	// TFA LSB
@@ -176,4 +171,21 @@ public:
 
 		return true; 
 	}
+
+	bool SetBacklight(uint8_t intensity) // A bit of hack to avoid using virtual functions (slight performance gain).
+	{ 
+		// the itead 4.3 doesn't appear to have back light control.
+		return true;
+
+		WriteCommand(REG_SET_PWM_CONF);		//set PWM for B/L
+		WriteData(0x06);	// Freq
+		WriteData(255*intensity/100);	// Duty cycle intensity is 0-100
+		WriteData(0x01);	// PWM Enable
+		WriteData(0xFF);	// DBC...
+		WriteData(0x00);
+		WriteData(0xf);
+
+		return true; 
+	}	
+
 };

@@ -132,7 +132,10 @@ public:
 
 	void SetBacklight( uint16_t intensity )	// intensity 0 - 100
 	{
-		tc_write_ra(&AVR32_TC0, 0, intensity * 4);		// pwm value 0 to 400
+		if ( !TIFaceClass::SetBacklight(intensity) )	// A bit of hack to avoid using virtual functions (slight performance gain).
+		{
+			tc_write_ra(&AVR32_TC0, 0, intensity * 4);		// pwm value 0 to 400
+		}
 	}
 
 	void SetBackgroundColour( uint16_t colour )

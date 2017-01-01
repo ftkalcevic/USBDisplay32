@@ -78,7 +78,7 @@ typedef struct _CmdSetGraphicsPosition
 {
     uint8_t cmd;
     uint16_t x;
-    uint8_t y;
+    uint16_t y;
 } CmdSetGraphicsPosition;
 
 typedef struct _CmdSetFont
@@ -103,9 +103,9 @@ typedef struct _CmdDrawRectangle
 {
     uint8_t cmd;
     uint16_t x;
-    uint8_t y;
+    uint16_t y;
     uint16_t width;
-    uint8_t height;
+    uint16_t height;
     uint8_t fill;
 } CmdDrawRectangle;
 
@@ -113,16 +113,16 @@ typedef struct _CmdDrawPixel
 {
     uint8_t cmd;
     uint16_t x;
-    uint8_t y;
+    uint16_t y;
 } CmdDrawPixel;
 
 typedef struct _CmdBitBlt
 {
     uint8_t cmd;
     uint16_t x;
-    uint8_t y;
+    uint16_t y;
     uint16_t width;
-    uint8_t height;
+    uint16_t height;
     uint16_t data[0];
 } CmdBitBlt;
 
@@ -130,9 +130,9 @@ typedef struct _CmdBitBltRLE
 {
     uint8_t cmd;
     uint16_t x;
-    uint8_t y;
+    uint16_t y;
     uint16_t width;
-    uint8_t height;
+    uint16_t height;
     uint8_t datalen[3]; // 24 bit data length.
     uint16_t data[0];
 } CmdBitBltRLE;
