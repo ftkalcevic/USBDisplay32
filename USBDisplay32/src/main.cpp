@@ -243,56 +243,11 @@ static void speedtest( void )
 
 static bool IsDataAvailable(void)
 {
-#ifdef USE_USB_CDC
-    #ifdef MAIN_BUFFER
-        // If there are byte available in the usb rx buffer, copy them all out.
-        while ( udi_cdc_is_rx_ready() )
-        {
-	        circ_buffer_ptr_t tmphead;
-	        /* Calculate buffer index */
-	        tmphead = ( RxHead + 1 ) & RX_BUFFER_MASK; 
-	        if ( tmphead == RxTail )
-	        {
-	            // Buffer Overflow.
-		        break;
-	        }
-	        else
-	        {
-	            RxBuf[tmphead] = udi_cdc_getc();    /* Store data in buffer */
-	            RxHead = tmphead;                   /* Store new index */
-	        }
-        }	
-        return RxHead != RxTail;
-    #else
-	    //delay_ms(1);
-        return udi_cdc_is_rx_ready();
-    #endif
-#else
     return false;
-#endif
 }    
 
 static int ReadByte( void )
 {
-#ifdef USE_USB_CDC
-    #ifdef MAIN_BUFFER
-        circ_buffer_ptr_t tmptail;
-		
-        if ( RxHead == RxTail ) 
-        {
-            // Buffer under flow
-            return -1;
-        }        
-        else
-        {
-            tmptail = ( RxTail + 1 ) & RX_BUFFER_MASK; /* Calculate buffer index */
-            RxTail = tmptail;                       /* Store new index */
-            return RxBuf[tmptail];                  /* Return data */
-        } 
-    #else
-        return udi_cdc_getc();                   
-    #endif
-#endif
     return -1;
 }
 

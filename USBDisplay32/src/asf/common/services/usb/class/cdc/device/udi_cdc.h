@@ -41,7 +41,6 @@
 
 #include "conf_usb.h"
 #include "usb_protocol.h"
-#include "usb_protocol_cdc.h"
 #include "udd.h"
 #include "udc_desc.h"
 #include "udi.h"
@@ -160,42 +159,6 @@ typedef struct {
 //! Global struture which contains standard UDI API for UDC
 extern UDC_DESC_STORAGE udi_api_t udi_api_cdc_data;
 
-/**
- * \name Interface for application
- *
- * These routines are used by memory to transfer its data 
- * to/from USB CDC endpoint.
- */
-//@{
-
-/**
- * \brief Notify a state change of DCD signal
- *
- * \param b_set      DCD is enabled if true, else disabled
- */
-void udi_cdc_ctrl_signal_dcd(bool b_set);
-
-/**
- * \brief Notify a state change of DSR signal
- *
- * \param b_set      DSR is enabled if true, else disabled
- */
-void udi_cdc_ctrl_signal_dsr(bool b_set);
-
-/**
- * \brief Notify a framing error
- */
-void udi_cdc_signal_framing_error(void);
-
-/**
- * \brief Notify a parity error
- */
-void udi_cdc_signal_parity_error(void);
-
-/**
- * \brief Notify a overrun
- */
-void udi_cdc_signal_overrun(void);
 
 /**
  * \brief This function checks if a character has been received on the CDC line
@@ -204,54 +167,6 @@ void udi_cdc_signal_overrun(void);
  */
 bool udi_cdc_is_rx_ready(void);
 
-/**
- * \brief Waits and gets a value on CDC line
- *
- * \return value read on CDC line
- */
-int udi_cdc_getc(void);
-
-/**
- * \brief Reads a RAM buffer on CDC line
- *
- * \param buf       Values readed
- * \param size      Number of value readed
- *
- * \return the number of data remaining
- */
-iram_size_t udi_cdc_read_buf(int* buf, iram_size_t size);
-
-/**
- * \brief This function checks if a new character sent is possible
- * The type int is used to support scanf redirection from compiler LIB.
- *
- * \return \c 1 if a new chracter can be sent
- */
-bool udi_cdc_is_tx_ready(void);
-
-/**
- * \brief Puts a byte on CDC line
- * The type int is used to support printf redirection from compiler LIB.
- *
- * \param value      Value to put
- *
- * \return \c 1 if function was successfully done, otherwise \c 0.
- */
-int udi_cdc_putc(int value);
-
-/**
- * \brief Writes a RAM buffer on CDC line
- *
- * \param buf       Values to write
- * \param size      Number of value to write
- *
- * \return the number of data remaining
- */
-iram_size_t udi_cdc_write_buf(const int* buf, iram_size_t size);
-
-//@}
-
-//@}
 
 #ifdef __cplusplus
 }

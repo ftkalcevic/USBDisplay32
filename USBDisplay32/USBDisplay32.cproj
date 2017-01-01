@@ -524,9 +524,6 @@
     <Compile Include="src\asf\common\services\usb\class\cdc\device\udi_cdc_desc.c">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="src\asf\common\services\usb\class\cdc\usb_protocol_cdc.h">
-      <SubType>compile</SubType>
-    </Compile>
     <None Include="src\asf\avr32\utils\make\Makefile.avr32.in">
       <SubType>compile</SubType>
     </None>

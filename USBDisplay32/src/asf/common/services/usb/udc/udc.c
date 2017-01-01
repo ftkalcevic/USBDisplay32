@@ -633,9 +633,6 @@ static bool udc_req_std_dev_get_descriptor(void)
 
 	conf_num = udd_g_ctrlreq.req.wValue & 0xff;
 
-	uint8_t descriptorType = udd_g_ctrlreq.req.wValue >> 8;
-	uint8_t index = udd_g_ctrlreq.req.wValue & 0xFF;
-
 	// Check descriptor ID
 	switch ((uint8_t) (udd_g_ctrlreq.req.wValue >> 8)) {
 	case USB_DT_DEVICE:
