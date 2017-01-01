@@ -57,20 +57,20 @@ extern "C" {
 #define  USB_DEVICE_EP_CTRL_SIZE       64
 
 //! Endpoints' numbers used by single CDC interface
-#define  UDI_CDC_DATA_EP_IN            (1 | USB_EP_DIR_IN)	// TX
-#define  UDI_CDC_DATA_EP_OUT           (2 | USB_EP_DIR_OUT)	// RX
-#define  UDI_CDC_COMM_EP               (3 | USB_EP_DIR_IN)	// Notify endpoint
-
-//! Interface numbers
-#define  UDI_CDC_COMM_IFACE_NUMBER     0
-#define  UDI_CDC_DATA_IFACE_NUMBER     1
+//#define  UDI_CDC_DATA_EP_IN            (1 | USB_EP_DIR_IN)	// TX
+//#define  UDI_CDC_DATA_EP_OUT           (2 | USB_EP_DIR_OUT)	// RX
+//#define  UDI_CDC_COMM_EP               (3 | USB_EP_DIR_IN)	// Notify endpoint
+//
+////! Interface numbers
+//#define  UDI_CDC_COMM_IFACE_NUMBER     0
+//#define  UDI_CDC_DATA_IFACE_NUMBER     1
 
 /**
  * \name UDD Configuration
  */
 //@{
 //! 3 endpoints used by single CDC interface
-#define  USB_DEVICE_MAX_EP             3
+#define  USB_DEVICE_MAX_EP             2
 //@}
 
 //@}

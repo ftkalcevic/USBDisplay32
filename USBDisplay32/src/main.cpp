@@ -692,17 +692,17 @@ int main (void)
 		if ( oldrtc != AVR32_RTC.val )
 		{
 			oldrtc = AVR32_RTC.val;
-			if ( touch_busy() == 0 )
-			{
-				if ( gpio_get_pin_value(TOUCH_nPENIRQ) == 0 )
-				{
-					touch_init_read();
-					n = 0;
-				}
-			}
-			lcdtext.WriteString("Tick ");
+			//lcdtext.WriteString("Tick ");
 		}
-		if ( touch_complete() )
+		if ( touch_busy() == 0 )
+		{
+			if ( gpio_get_pin_value(TOUCH_nPENIRQ) == 0 )
+			{
+				touch_init_read();
+				n = 0;
+			}
+		}
+		else if ( touch_complete() )
 		{
 			char s[50];
 			snprintf(s, sizeof(s), "%d,%d  %d           ", touch_x, touch_y,n);

@@ -39,9 +39,11 @@
 #include "conf_usb.h"
 #include "usb_protocol.h"
 #include "udd.h"
+#include "udi_cdc.h"
 #include "udc_desc.h"
 #include "udi.h"
 #include "udc.h"
+
 
 /**
  * \addtogroup udc_group
@@ -631,6 +633,9 @@ static bool udc_req_std_dev_get_descriptor(void)
 
 	conf_num = udd_g_ctrlreq.req.wValue & 0xff;
 
+	uint8_t descriptorType = udd_g_ctrlreq.req.wValue >> 8;
+	uint8_t index = udd_g_ctrlreq.req.wValue & 0xFF;
+
 	// Check descriptor ID
 	switch ((uint8_t) (udd_g_ctrlreq.req.wValue >> 8)) {
 	case USB_DT_DEVICE:
@@ -714,6 +719,12 @@ static bool udc_req_std_dev_get_descriptor(void)
 		}
 		break;
 
+	case USB_DT_LCD:
+		udd_set_setup_payload(
+			(uint8_t *) udc_config.lcd,
+			udc_config.lcd->bFunctionLength);
+		break;
+		
 	default:
 		// Unknown descriptor requested
 		return false;

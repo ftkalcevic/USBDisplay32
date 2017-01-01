@@ -97,6 +97,21 @@ typedef struct {
 } udc_config_speed_t;
 
 
+
+COMPILER_PACK_SET(1);
+
+typedef struct {
+	uint8_t bFunctionLength;
+	uint8_t bDescriptorType;
+	uint8_t bVersion;
+	uint16_t wWidth;
+	uint16_t wHeight;
+	uint16_t wWidthMM;
+	uint16_t wHeightMM;
+	uint8_t bDisplayType;
+} usb_lcd_desc_t ;
+
+
 /**
  * \brief All information about the USB Device
  */
@@ -113,6 +128,7 @@ typedef struct {
 	//! USB configuration descriptor and UDI API pointers for high speed
 	udc_config_speed_t UDC_DESC_STORAGE *conf_hs;
 #endif
+	usb_lcd_desc_t UDC_DESC_STORAGE *lcd;
 } udc_config_t;
 
 //! Global variables of USB Device Descriptor and UDI links

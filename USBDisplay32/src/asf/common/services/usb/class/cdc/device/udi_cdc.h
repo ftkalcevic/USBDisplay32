@@ -66,6 +66,8 @@ extern "C" {
 //@{
 
 
+
+
 /**
  * \brief Communication Class interface descriptor
  *
@@ -75,32 +77,10 @@ extern "C" {
 typedef struct {
 	//! Standard interface descriptor
 	usb_iface_desc_t iface;
-	//! CDC Header functional descriptor
-	usb_cdc_hdr_desc_t header;
-	//! CDC Abstract Control Model functional descriptor
-	usb_cdc_acm_desc_t acm;
-	//! CDC Union functional descriptor
-	usb_cdc_union_desc_t union_desc;
-	//! CDC Call Management functional descriptor
-	usb_cdc_call_mgmt_desc_t call_mgmt;
-	//! Notification endpoint descriptor
-	usb_ep_desc_t ep_notify;
+	//! endpoint descriptor
+	usb_ep_desc_t ep_out;
 } udi_cdc_comm_desc_t;
 
-
-/**
- * \brief Data Class interface descriptor
- *
- * Interface descriptor with associated endpoint descriptors for the
- * CDC Data Class interface.
- */
-typedef struct {
-	//! Standard interface descriptor
-	usb_iface_desc_t iface;
-	//! Data IN/OUT endpoint descriptors
-	usb_ep_desc_t ep_in;
-	usb_ep_desc_t ep_out;
-} udi_cdc_data_desc_t;
 
 
 //! By default no string associated to these interfaces
@@ -138,82 +118,46 @@ typedef struct {
 #  define UDI_CDC_DATA_DESC_IFACE
 #endif
 
-#define UDI_CDC_IAD_DESC        {\
-   .bLength                      = sizeof(usb_iad_desc_t),\
-   .bDescriptorType              = USB_DT_IAD,\
-   .bFirstInterface              = UDI_CDC_COMM_IFACE_NUMBER,\
-   .bInterfaceCount              = 2,\
-   .bFunctionClass               = CDC_CLASS_COMM,\
-   .bFunctionSubClass            = CDC_SUBCLASS_ACM,\
-   .bFunctionProtocol            = CDC_PROTOCOL_V25TER,\
-   .iFunction                    = UDI_CDC_IAD_STRING_ID,\
-   }
+#define	LCD_DISPLAY_CLASS		0xFF
+#define	LCD_DISPLAY_SUBCLASS	0
+#define	LCD_DISPLAY_PROTOCOL	0
+#define USB_DT_LCD				0x30
+#define UDI_LCD_IFACE_NUMBER	0
+#define LCD_VERSION				1
+
+#define  UDI_LCD_DATA_EP_OUT           (2 | USB_EP_DIR_OUT)	// RX
 
 //! Content of CDC COMM interface descriptor for all speed
 #define UDI_CDC_COMM_DESC        {\
-   UDI_CDC_COMM_DESC_IFACE \
+   .iface.bInterfaceNumber       = UDI_LCD_IFACE_NUMBER, \
    .iface.bLength                = sizeof(usb_iface_desc_t),\
    .iface.bDescriptorType        = USB_DT_INTERFACE,\
    .iface.bAlternateSetting      = 0,\
    .iface.bNumEndpoints          = 1,\
-   .iface.bInterfaceClass        = CDC_CLASS_COMM,\
-   .iface.bInterfaceSubClass     = CDC_SUBCLASS_ACM,\
-   .iface.bInterfaceProtocol     = CDC_PROTOCOL_V25TER,\
-   .iface.iInterface             = UDI_CDC_COMM_STRING_ID,\
-   .header.bFunctionLength       = sizeof(usb_cdc_hdr_desc_t),\
-   .header.bDescriptorType       = CDC_CS_INTERFACE,\
-   .header.bDescriptorSubtype    = CDC_SCS_HEADER,\
-   .header.bcdCDC                = LE16(0x0110),\
-   .call_mgmt.bFunctionLength    = sizeof(usb_cdc_call_mgmt_desc_t),\
-   .call_mgmt.bDescriptorType    = CDC_CS_INTERFACE,\
-   .call_mgmt.bDescriptorSubtype = CDC_SCS_CALL_MGMT,\
-   .call_mgmt.bmCapabilities     = \
-			CDC_CALL_MGMT_SUPPORTED | CDC_CALL_MGMT_OVER_DCI,\
-   .acm.bFunctionLength          = sizeof(usb_cdc_acm_desc_t),\
-   .acm.bDescriptorType          = CDC_CS_INTERFACE,\
-   .acm.bDescriptorSubtype       = CDC_SCS_ACM,\
-   .acm.bmCapabilities           = CDC_ACM_SUPPORT_LINE_REQUESTS,\
-   .union_desc.bFunctionLength   = sizeof(usb_cdc_union_desc_t),\
-   .union_desc.bDescriptorType   = CDC_CS_INTERFACE,\
-   .union_desc.bDescriptorSubtype= CDC_SCS_UNION,\
-   .ep_notify.bLength            = sizeof(usb_ep_desc_t),\
-   .ep_notify.bDescriptorType    = USB_DT_ENDPOINT,\
-   .ep_notify.bEndpointAddress   = UDI_CDC_COMM_EP,\
-   .ep_notify.bmAttributes       = USB_EP_TYPE_INTERRUPT,\
-   .ep_notify.wMaxPacketSize     = LE16(UDI_CDC_COMM_EP_SIZE),\
-   .ep_notify.bInterval          = 8,\
-   }
-
-
-//! Content of CDC DATA interface descriptor for all speed
-#define UDI_CDC_DATA_DESC     {\
-   UDI_CDC_DATA_DESC_IFACE \
-   .iface.bLength                = sizeof(usb_iface_desc_t),\
-   .iface.bDescriptorType        = USB_DT_INTERFACE,\
-   .iface.bAlternateSetting      = 0,\
-   .iface.bNumEndpoints          = 2,\
-   .iface.bInterfaceClass        = CDC_CLASS_DATA,\
-   .iface.bInterfaceSubClass     = 0,\
-   .iface.bInterfaceProtocol     = 0,\
-   .iface.iInterface             = UDI_CDC_DATA_STRING_ID,\
-   .ep_in.bLength                = sizeof(usb_ep_desc_t),\
-   .ep_in.bDescriptorType        = USB_DT_ENDPOINT,\
-   .ep_in.bEndpointAddress       = UDI_CDC_DATA_EP_IN,\
-   .ep_in.wMaxPacketSize         = LE16(UDI_CDC_DATA_EPS_SIZE),\
-   .ep_in.bmAttributes           = USB_EP_TYPE_BULK,\
-   .ep_in.bInterval              = 0,\
+   .iface.bInterfaceClass        = LCD_DISPLAY_CLASS,\
+   .iface.bInterfaceSubClass     = LCD_DISPLAY_SUBCLASS,\
+   .iface.bInterfaceProtocol     = LCD_DISPLAY_PROTOCOL,\
+   .iface.iInterface             = 0,\
    .ep_out.bLength               = sizeof(usb_ep_desc_t),\
    .ep_out.bDescriptorType       = USB_DT_ENDPOINT,\
-   .ep_out.bEndpointAddress      = UDI_CDC_DATA_EP_OUT,\
+   .ep_out.bEndpointAddress      = UDI_LCD_DATA_EP_OUT,\
    .ep_out.wMaxPacketSize        = LE16(UDI_CDC_DATA_EPS_SIZE),\
    .ep_out.bmAttributes          = USB_EP_TYPE_BULK,\
    .ep_out.bInterval             = 1,\
    }
-//@}
 
+#define UDI_LCD_DESC {\
+   .bFunctionLength			 = sizeof(usb_lcd_desc_t),\
+   .bDescriptorType			 = USB_DT_LCD, \
+   .bVersion				 = LCD_VERSION, \
+   .wWidth					 = LE16(SCREEN_WIDTH),\
+   .wHeight					 = LE16(SCREEN_HEIGHT),\
+   .wWidthMM				 = LE16(SCREEN_WIDTH_MM),\
+   .wHeightMM				 = LE16(SCREEN_HEIGHT_MM),\
+   .bDisplayType			 = DISPLAY_TYPE,\
+}
 
 //! Global struture which contains standard UDI API for UDC
-extern UDC_DESC_STORAGE udi_api_t udi_api_cdc_comm;
 extern UDC_DESC_STORAGE udi_api_t udi_api_cdc_data;
 
 /**

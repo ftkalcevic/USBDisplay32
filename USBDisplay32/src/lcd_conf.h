@@ -5,8 +5,11 @@
 
 #ifdef ITDB02_32WD
 
+#define DISPLAY_TYPE		1
 #define SCREEN_WIDTH		400
 #define SCREEN_HEIGHT		240
+#define SCREEN_WIDTH_MM		70
+#define SCREEN_HEIGHT_MM	42
 
 #define RGB(r,g,b) ((uint16_t)(((((r)>>3)&0x1f) << 11) | ((((g)>>2)&0x3f) << 5) | (((b)>>3)&0x1f) ))
 
@@ -17,8 +20,11 @@
 
 #ifdef ITDB02_43
 
+#define DISPLAY_TYPE		1
 #define SCREEN_WIDTH		480
 #define SCREEN_HEIGHT		272
+#define SCREEN_WIDTH_MM		95
+#define SCREEN_HEIGHT_MM	54
 
 #define RGB(r,g,b) ((uint16_t)(((((r)>>3)&0x1f) << 11) | ((((g)>>2)&0x3f) << 5) | (((b)>>3)&0x1f) ))
 
