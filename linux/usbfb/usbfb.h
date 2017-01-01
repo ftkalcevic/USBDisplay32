@@ -41,6 +41,7 @@ struct dlfb_data {
 	char *backing_buffer;
 	int fb_count;
 	bool virtualized; /* true when physical usb device not present */
+	struct delayed_work init_framebuffer_work;
 	struct delayed_work free_framebuffer_work;
 	atomic_t usb_active; /* 0 = update virtual buffer, but no usb traffic */
 	atomic_t lost_pixels; /* 1 = a render op failed. Need screen refresh */
@@ -60,8 +61,6 @@ struct dlfb_data {
 	atomic_t bytes_rendered; /* raw pixel-bytes driver asked to render */
 	atomic_t bytes_identical; /* saved effort with backbuffer comparison */
 	atomic_t bytes_sent; /* to usb, after compression including overhead */
-	atomic_t deferred_calls; /* deferred io calls */
-	atomic_t deferred_bytes; /* deferred bytes */
 	atomic_t cpu_kcycles_used; /* transpired during pixel processing */
 	atomic_t backlight_intensity;
 };
@@ -71,12 +70,12 @@ struct dlfb_data {
 
 /* -BULK_SIZE as per usb-skeleton. Can we get full page and avoid overhead? */
 #define BULK_SIZE 512
-#define MAX_TRANSFER PAGE_SIZE*16
-#define WRITES_IN_FLIGHT (8)
+#define MAX_TRANSFER (PAGE_SIZE*16 - BULK_SIZE)
+#define WRITES_IN_FLIGHT (4)
 
 #define MAX_VENDOR_DESCRIPTOR_SIZE 256
 
-#define GET_URB_TIMEOUT	20*HZ
+#define GET_URB_TIMEOUT	HZ
 #define FREE_URB_TIMEOUT (HZ*2)
 
 #define BPP                     2
@@ -95,7 +94,7 @@ struct dlfb_data {
 #define MIN_RAW_CMD_BYTES	(RAW_HEADER_BYTES + MIN_RAW_PIX_BYTES)
 
 #define DISPLAY_FPS 60
-#define DL_DEFIO_WRITE_DELAY    (HZ/DISPLAY_FPS) /* fb_deferred_io.delay in jiffies */
+#define DL_DEFIO_WRITE_DELAY    5 /* fb_deferred_io.delay in jiffies */
 #define DL_DEFIO_WRITE_DISABLE  (HZ*60) /* "disable" with long delay */
 
 /* remove these once align.h patch is taken into kernel */
@@ -107,45 +106,5 @@ struct dlfb_data {
 #define EDID_LENGTH 128
 #endif
 
-/* remove once this gets added to sysfs.h */
-#define __ATTR_RW(attr) __ATTR(attr, 0644, attr##_show, attr##_store)
-
-/*
- * usbfb is both a usb device, and a framebuffer device.
- * They may exist at the same time, but during various stages
- * inactivity, teardown, or "virtual" operation, only one or the
- * other will exist (one will outlive the other).  So we can't
- * call the dev_*() macros, because we don't have a stable dev object.
- */
-
-#ifndef pr_err
-#define pr_err(format, arg...)		\
-	pr_err("usbfb: " format, ## arg)
-#endif
-
-#ifndef pr_warn
-#define pr_warn(format, arg...) \
-	pr_warning("usbfb: " format, ## arg)
-#endif
-
-#ifndef pr_notice
-#define pr_notice(format, arg...) \
-	pr_notice("usbfb: " format, ## arg)
-#endif
-
-#ifndef pr_info
-#define pr_info(format, arg...) \
-	pr_info("usbfb: " format, ## arg)
-#endif
-
-/* Let people on older kernels build usbfb as a module */
-#ifndef vzalloc
-#define vzalloc vmalloc
-#endif
-
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 33)
-#define usb_alloc_coherent usb_buffer_alloc
-#define usb_free_coherent usb_buffer_free
-#endif
 
 #endif
