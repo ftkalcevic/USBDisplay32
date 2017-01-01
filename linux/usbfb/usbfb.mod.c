@@ -21,7 +21,6 @@ __attribute__((section("__versions"))) = {
 	{ 0x1f76b17, "device_remove_file" },
 	{ 0x2d2e3cb9, "device_remove_bin_file" },
 	{ 0x12da5bb2, "__kmalloc" },
-	{ 0x9924c496, "__usb_get_extra_descriptor" },
 	{ 0xd6ee688f, "vmalloc" },
 	{ 0x15692c87, "param_ops_int" },
 	{ 0xe809f812, "framebuffer_release" },
@@ -59,6 +58,7 @@ __attribute__((section("__versions"))) = {
 	{ 0x708a1153, "kmem_cache_alloc" },
 	{ 0xda8af7ad, "fb_find_nearest_mode" },
 	{ 0x29f2a053, "sys_fillrect" },
+	{ 0xf0fdf6cb, "__stack_chk_fail" },
 	{ 0x77edf722, "schedule_delayed_work" },
 	{ 0x79a3b6ae, "sys_imageblit" },
 	{ 0xc06b9161, "fb_sys_write" },
@@ -89,6 +89,6 @@ __attribute__((section("__versions"))) = {
 static const char __module_depends[]
 __used
 __attribute__((section(".modinfo"))) =
-"depends=usbcore,fb_sys_fops,syscopyarea,sysfillrect,sysimgblt";
+"depends=fb_sys_fops,syscopyarea,usbcore,sysfillrect,sysimgblt";
 
 MODULE_ALIAS("usb:v1C40p04DCd*dc*dsc*dp*ic*isc*ip*");

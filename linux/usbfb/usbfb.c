@@ -33,26 +33,8 @@
 #include <linux/sysfs.h>
 #include "usbfb.h"
 
-#define ITDB02_43
-//#define ITDB02_32W
-#ifdef ITDB02_43
-    #define DISPLAY_X 		480
-    #define DISPLAY_Y 		272
-    #define DISPLAY_X_MM	93
-    #define DISPLAY_Y_MM	52
-    #define SCANLINE_LEN (DISPLAY_X*2)
-    #define ENDPOINT_NO 2
-#endif
 
-
-#ifdef ITDB02_32W
-    #define DISPLAY_X 		400
-    #define DISPLAY_Y 		240
-    #define DISPLAY_X_MM	72
-    #define DISPLAY_Y_MM	44
-    #define SCANLINE_LEN (DISPLAY_X*2)
-    #define ENDPOINT_NO 2
-#endif
+#define ENDPOINT_NO 2
 
 
 static struct fb_fix_screeninfo dlfb_fix = {
@@ -224,7 +206,7 @@ int dlfb_handle_damage(struct dlfb_data *dev, int x, int y,
 	int bytes_identical = 0;
 	struct urb *urb;
 
-    // pr_info("Handle Damage %d,%d, %dx%d\n", x,y, width, height );
+    //pr_info("Handle Damage %d,%d, %dx%d\n", x,y, width, height );
 
 	start_cycles = get_cycles();
 
@@ -433,8 +415,9 @@ static void dlfb_dpy_deferred_io(struct fb_info *info,
 
 	    //pr_notice("%d %d\n", start, end );
     
-        int ystart = start / SCANLINE_LEN;
-        int yend = (end / SCANLINE_LEN)+1;
+        int scanline_len = 2 * dev->width;
+        int ystart = start / scanline_len;
+        int yend = (end / scanline_len)+1;
 
         bytes += PAGE_SIZE;
 
@@ -462,10 +445,10 @@ static void dlfb_dpy_deferred_io(struct fb_info *info,
     {
         if ( ymin < 0 )
             ymin = 0;
-        if ( ymax >= DISPLAY_Y )
-            ymax = DISPLAY_Y-1;
+        if ( ymax >= dev->height )
+            ymax = dev->height-1;
 	    //pr_notice("y %d %d\n", ymin, ymax );
-		dlfb_handle_damage( dev, 0, ymin, DISPLAY_X, ymax-ymin+1,
+		dlfb_handle_damage( dev, 0, ymin, dev->width, ymax-ymin+1,
 			                info->screen_base);
     }
 
@@ -478,7 +461,7 @@ static int dlfb_get_edid(struct dlfb_data *dev, char *edid, int len)
 {
 	int i;
 
-        static char usbdisplay32_edid[128] =
+    char usbdisplay32_edid[128] =
 {
     // Header
     0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, // 0-7
@@ -502,7 +485,7 @@ static int dlfb_get_edid(struct dlfb_data *dev, char *edid, int len)
     0,                                              // 36
     0,                                              // 37
     // Standard timing
-    (DISPLAY_X/8)-31, 0,                                          // 38-39
+    (dev->width/8)-31, 0,                                          // 38-39
     1, 1,                                           // 40-41
     1, 1,                                           // 42-43
     1, 1,                                           // 44-45
@@ -512,17 +495,17 @@ static int dlfb_get_edid(struct dlfb_data *dev, char *edid, int len)
     1, 1,                                           // 52-53
     // desc 1 - timing detail
     1,0,
-    DISPLAY_X & 0xFF,
+    dev->width & 0xFF,
     0,
-    (DISPLAY_X & 0x0F00)>>4,
-    DISPLAY_Y & 0xFF,
+    (dev->width & 0x0F00)>>4,
+    dev->height & 0xFF,
     0,
-    (DISPLAY_Y & 0x0F00)>>4,
+    (dev->height & 0x0F00)>>4,
     0,
     0,
     0,
-    DISPLAY_X_MM,
-    DISPLAY_Y_MM,
+    dev->width_mm,
+    dev->height_mm,
     0,
     0,
     0,
@@ -781,10 +764,10 @@ static int dlfb_ops_release(struct fb_info *info, int user)
 static int dlfb_is_valid_mode(struct fb_videomode *mode,
 		struct fb_info *info)
 {
-	//struct dlfb_data *dev = info->par;
+	struct dlfb_data *dev = info->par;
 
-	if (mode->xres != DISPLAY_X ||
-            mode->yres != DISPLAY_Y) {
+	if (mode->xres != dev->width ||
+            mode->yres != dev->height) {
 		pr_warn("%dx%d beyond chip capabilities\n",
 		       mode->xres, mode->yres);
 		return 0;
@@ -1317,12 +1300,12 @@ return 0;
     */
 }
 
+
 static int dlfb_parse_vendor_descriptor(struct dlfb_data *dev,
 					struct usb_interface *interface)
 {
 	char *desc;
 	char *buf;
-	char *desc_end;
 
 	int total_len = 0;
 
@@ -1332,59 +1315,31 @@ pr_info("dlfb_parse_vendor_descriptor" );
 		return false;
 	desc = buf;
 
-	total_len = usb_get_descriptor(interface_to_usbdev(interface),
-					0x5f, /* vendor specific */
-					0, desc, MAX_VENDOR_DESCRIPTOR_SIZE);
+#define USB_DT_LCD 0x30
 
-	/* if not found, look in configuration descriptor */
-	if (total_len < 0) {
-		if (0 == usb_get_extra_descriptor(interface->cur_altsetting,
-			0x5f, &desc))
-			total_len = (int) desc[0];
-	}
+	total_len = usb_get_descriptor(interface_to_usbdev(interface),
+					USB_DT_LCD, /* vendor specific */
+					0, desc, MAX_VENDOR_DESCRIPTOR_SIZE);
+pr_info("vendor_descriptor total_len=%d",total_len );
+
 
 	if (total_len > 5) {
-		pr_info("vendor descriptor length:%x data:%02x %02x %02x %02x" \
-			"%02x %02x %02x %02x %02x %02x %02x\n",
-			total_len, desc[0],
-			desc[1], desc[2], desc[3], desc[4], desc[5], desc[6],
-			desc[7], desc[8], desc[9], desc[10]);
+		pr_info("vendor descriptor length:%x\n", total_len );
 
 		if ((desc[0] != total_len) || /* descriptor length */
-		    (desc[1] != 0x5f) ||   /* vendor descriptor type */
-		    (desc[2] != 0x01) ||   /* version (2 bytes) */
-		    (desc[3] != 0x00) ||
-		    (desc[4] != total_len - 2)) /* length after type */
+		    (desc[1] != USB_DT_LCD) ||   /* vendor descriptor type */
+		    (desc[2] != 0x01) )  /* version (1 bytes) */
 			goto unrecognized;
 
-		desc_end = desc + total_len;
-		desc += 5; /* the fixed header we've already parsed */
+		dev->width = le16_to_cpu( *(u16 *)(desc+3) );
+		dev->height = le16_to_cpu( *(u16 *)(desc+5) );
+		dev->width_mm = le16_to_cpu( *(u16 *)(desc+7) );
+		dev->height_mm = le16_to_cpu( *(u16 *)(desc+9) );
+		dev->display_type = *(desc+11);
 
-		while (desc < desc_end) {
-			u8 length;
-			u16 key;
-
-			key = *((u16 *) desc);
-			desc += sizeof(u16);
-			length = *desc;
-			desc++;
-
-			switch (key) {
-			case 0x0200: { /* max_area */
-				u32 max_area;
-				max_area = le32_to_cpu(*((u32 *)desc));
-				pr_warn("DL chip limited to %d pixel modes\n",
-					max_area);
-				dev->sku_pixel_limit = max_area;
-				break;
-			}
-			default:
-				break;
-			}
-			desc += length;
-		}
-	} else {
-		pr_info("vendor descriptor not available (%d)\n", total_len);
+		pr_info("width=%d, height=%d\n", dev->width,dev->height);
+		pr_info("width_mm=%d, height_mm=%d\n", dev->width_mm,dev->height_mm);
+		pr_info("display_type=%d\n", dev->display_type);
 	}
 
 	goto success;
@@ -1434,7 +1389,7 @@ pr_err("Probing - VID:%04X PID:%04X\n", usbdev->descriptor.idVendor, usbdev->des
 	pr_info("fb_defio enable=%d\n", fb_defio);
 	pr_info("shadow enable=%d\n", shadow);
 
-	dev->sku_pixel_limit = DISPLAY_X * DISPLAY_Y; /* default to maximum */
+	dev->sku_pixel_limit = dev->width * dev->width; /* default to maximum */
 
 	if (!dlfb_parse_vendor_descriptor(dev, interface)) {
 		pr_err("firmware not recognized. Assume incompatible device\n");

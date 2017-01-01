@@ -46,6 +46,11 @@ struct dlfb_data {
 	atomic_t lost_pixels; /* 1 = a render op failed. Need screen refresh */
 	char *edid; /* null until we read edid from hw or get from sysfs */
 	size_t edid_size;
+    u16 width;
+    u16 height;
+    u16 width_mm;
+    u16 height_mm;
+    u8 display_type;
 	int sku_pixel_limit;
 	int base16;
 	int base8;

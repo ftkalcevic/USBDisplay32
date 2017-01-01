@@ -3,6 +3,7 @@
 #include <fcntl.h>
 #include <linux/fb.h>
 #include <sys/mman.h>
+#include <stdint.h>
 
 
 #define DLFB_IOCTL_RETURN_EDID   0xAD
@@ -13,6 +14,7 @@ struct dloarea {
         int x2, y2;
 };
 
+#define RGB(r,g,b) ((uint16_t)(((((r)>>3)&0x1f) << 11) | ((((g)>>2)&0x3f) << 5) | (((b)>>3)&0x1f) ))
 
 
 int main(int argc, char *argv[] )
@@ -63,7 +65,7 @@ int main(int argc, char *argv[] )
                        fbfd, 0);
     if ((int)fbp == -1) {
         printf("Error: failed to map framebuffer device to memory.\n");
-        exit(4);
+        exit(2);
     }
     printf("The framebuffer device was mapped to memory successfully.\n");
 
@@ -91,7 +93,7 @@ int main(int argc, char *argv[] )
                 *(fbp + location + 2) = r;
                 *(fbp + location + 3) = 0;      // No transparency
             } else  { //assume 16bpp
-                unsigned short int t = ((r>>3)<<11) | ((g>>2) << 5) | (b>>3);
+                unsigned short int t = RGB(r,g,b);
                 *((unsigned short int*)(fbp + location)) = t;
             }
 
@@ -104,6 +106,43 @@ int main(int argc, char *argv[] )
 
     if (ioctl(fbfd, DLFB_IOCTL_REPORT_DAMAGE, &area)) {
         printf("Error: failed to damage framebuffer.\n");
+    }
+
+    for ( y = 0; y < H - 20; y++ )
+    for ( x = 0; x < W - 20; x++ )
+    {
+        int i,j;
+        for ( i = 0; i < 20; i++ )
+            for ( j = 0; j < 20; j++ )
+            {
+                location = (x+i+vinfo.xoffset) * (vinfo.bits_per_pixel/8) +
+                           (y+j+vinfo.yoffset) * finfo.line_length;
+
+                char b = 0;
+                char g = 0;
+                char r = 255;
+
+                if ( i == 0 ) { r = 0; g = 255; b=0; }
+
+                if ( vinfo.bits_per_pixel == 32 ) {
+                    *(fbp + location) = b;
+                    *(fbp + location + 1) = g;
+                    *(fbp + location + 2) = r;
+                    *(fbp + location + 3) = 0;      // No transparency
+                } else  { //assume 16bpp
+                    unsigned short int t = RGB(r,g,b);
+                    *((unsigned short int*)(fbp + location)) = t;
+                }
+            }
+        area.x = x;
+        area.y = y;
+        area.w = 20;
+        area.h = 20;
+
+        if (ioctl(fbfd, DLFB_IOCTL_REPORT_DAMAGE, &area)) {
+            printf("Error: failed to damage framebuffer.\n");
+        }
+
     }
 
     munmap(fbp, screensize);
