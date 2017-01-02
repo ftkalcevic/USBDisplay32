@@ -209,7 +209,7 @@ int dlfb_handle_damage(struct dlfb_data *dev, int x, int y,
 	int bytes_identical = 0;
 	struct urb *urb;
 
-    //pr_info("Handle Damage %d,%d, %dx%d\n", x,y, width, height );
+    //pr_info("Damage %d,%d %dx%d\n", x,y, width, height );
 
 	start_cycles = get_cycles();
 
@@ -219,68 +219,68 @@ int dlfb_handle_damage(struct dlfb_data *dev, int x, int y,
 		return -EINVAL;
 
 	if (!atomic_read(&dev->usb_active))
-		return 0;
+        return 0;
 
 	urb = dlfb_get_urb(dev);
 	if (!urb)
-            return 0;
+        return 0;
 	cmd = urb->transfer_buffer;
 	bytes_sent = 0;
         
 
-        *cmd++ = 0x8b;
-        *cmd++ = (x >> 8) & 0xFF;
-        *cmd++ = x & 0xFF;
-        *cmd++ = (y >> 8) & 0xFF;
-        *cmd++ = y & 0xFF;
-        *cmd++ = (width >> 8) & 0xFF;
-        *cmd++ = width & 0xFF;
-        *cmd++ = (height >> 8) & 0xFF;
-        *cmd++ = height & 0xFF;
-        bytes_sent = 9;
-        ret = dlfb_submit_urb(dev, urb, bytes_sent);
+    *cmd++ = 0x8b;
+    *cmd++ = (x >> 8) & 0xFF;
+    *cmd++ = x & 0xFF;
+    *cmd++ = (y >> 8) & 0xFF;
+    *cmd++ = y & 0xFF;
+    *cmd++ = (width >> 8) & 0xFF;
+    *cmd++ = width & 0xFF;
+    *cmd++ = (height >> 8) & 0xFF;
+    *cmd++ = height & 0xFF;
+    bytes_sent = 9;
+    ret = dlfb_submit_urb(dev, urb, bytes_sent);
          
 	urb = dlfb_get_urb(dev);
 	if (!urb)
-            return 0;
+        return 0;
 	cmd = urb->transfer_buffer;
 	bytes_sent = 0;
 
-        for (i = y; i < y + height ; i++) 
+    for (i = y; i < y + height ; i++) 
+    {
+        const int line_offset = dev->info->fix.line_length * i;
+        const int byte_offset = line_offset + (x * BPP);
+
+        char *pixels = (char *) dev->info->fix.smem_start;
+        pixels += byte_offset;
+        for ( j = 0; j < width; j++ )
         {
-            const int line_offset = dev->info->fix.line_length * i;
-            const int byte_offset = line_offset + (x * BPP);
+            char b2 = *(pixels++);
+            char b1 = *(pixels++);
+            *cmd++ = b1;
+            *cmd++ = b2;
+            bytes_sent += 2;
 
-            char *pixels = (char *) dev->info->fix.smem_start;
-            pixels += byte_offset;
-            for ( j = 0; j < width; j++ )
+            if ( bytes_sent >= MAX_TRANSFER )
             {
-                char b2 = *(pixels++);
-                char b1 = *(pixels++);
-                *cmd++ = b1;
-                *cmd++ = b2;
-                bytes_sent += 2;
+                // Full buffer
+                ret = dlfb_submit_urb(dev, urb, bytes_sent);
 
-                if ( bytes_sent >= MAX_TRANSFER )
+                urb = dlfb_get_urb(dev);
+                if (!urb)
                 {
-                    // Full buffer
-                    ret = dlfb_submit_urb(dev, urb, bytes_sent);
-
-                    urb = dlfb_get_urb(dev);
-	            if (!urb)
-                    {
-                        pr_warn( "No urb to complete damage transfer\n" );
-                        return 0;
-                    }   
-	            cmd = urb->transfer_buffer;
-                    bytes_sent = 0;
-                }
+                    pr_warn( "No urb to complete damage transfer\n" );
+                    return 0;
+                }   
+                cmd = urb->transfer_buffer;
+                bytes_sent = 0;
             }
+        }
 	}
-        if ( bytes_sent > 0 )
-            ret = dlfb_submit_urb(dev, urb, bytes_sent);
-        else
-            dlfb_urb_completion(urb);
+    if ( bytes_sent > 0 )
+        ret = dlfb_submit_urb(dev, urb, bytes_sent);
+    else
+        dlfb_urb_completion(urb);
 
 	atomic_add(bytes_sent, &dev->bytes_sent);
 	atomic_add(bytes_identical, &dev->bytes_identical);
@@ -305,7 +305,7 @@ static ssize_t dlfb_ops_write(struct fb_info *info, const char __user *buf,
 	ssize_t result;
 	struct dlfb_data *dev = info->par;
 	u32 offset = (u32) *ppos;
-
+//pr_info("dlfb_ops_write");
 	result = fb_sys_write(info, buf, count, ppos);
 
 	if (result > 0) {
@@ -324,9 +324,8 @@ static ssize_t dlfb_ops_write(struct fb_info *info, const char __user *buf,
 static void dlfb_ops_copyarea(struct fb_info *info,
 				const struct fb_copyarea *area)
 {
-
 	struct dlfb_data *dev = info->par;
-
+//pr_info("dlfb_ops_copyarea");
 	sys_copyarea(info, area);
 
 	dlfb_handle_damage(dev, area->dx, area->dy,
@@ -337,6 +336,7 @@ static void dlfb_ops_imageblit(struct fb_info *info,
 				const struct fb_image *image)
 {
 	struct dlfb_data *dev = info->par;
+//pr_info("dlfb_ops_imageblit");
 
 	sys_imageblit(info, image);
 
@@ -348,6 +348,7 @@ static void dlfb_ops_fillrect(struct fb_info *info,
 			  const struct fb_fillrect *rect)
 {
 	struct dlfb_data *dev = info->par;
+//pr_info("dlfb_ops_fillrect");
 
 	sys_fillrect(info, rect);
 
@@ -370,6 +371,7 @@ static void dlfb_dpy_deferred_io(struct fb_info *info,
     int ymin, ymax;
     bool bFirst = true;
     int bytes = 0;
+//pr_info("dlfb_dpy_deferred_io");
 
 	//pr_notice("D\n");
                 //return;
@@ -516,8 +518,8 @@ static int dlfb_get_edid(struct dlfb_data *dev, char *edid, int len)
 static int dlfb_ops_ioctl(struct fb_info *info, unsigned int cmd,
 				unsigned long arg)
 {
-
 	struct dlfb_data *dev = info->par;
+//pr_info("dlfb_ops_ioctl");
 
 	if (!atomic_read(&dev->usb_active))
 		return 0;
@@ -782,10 +784,13 @@ static int dlfb_ops_set_par(struct fb_info *info)
 	int result=0;
 	u16 *pix_framebuffer;
 	int i;
+    int backlight;
 
 	pr_notice("set_par mode %dx%d\n", info->var.xres, info->var.yres);
 
-        dlfb_set_backlight( dev, atomic_read(&dev->backlight_intensity) );
+    backlight = atomic_read(&dev->backlight_intensity);
+	pr_notice("set_par backlight %d\n",backlight );
+    dlfb_set_backlight( dev, backlight );
 
 	//result = dlfb_set_video_mode(dev, &info->var);
 
@@ -1155,11 +1160,11 @@ pr_info("backlight_store\n");
 	if ( sscanf( buf, "%d", &intensity ) > 0 )
 	{	
 	    if ( intensity < 0 )
-		intensity = 0;
+		    intensity = 0;
 	    else if ( intensity > 100 )
-		intensity = 100;
+		    intensity = 100;
 	    atomic_set(&dev->backlight_intensity, intensity);
-            dlfb_set_backlight( dev, atomic_read(&dev->backlight_intensity) );
+        dlfb_set_backlight( dev, atomic_read(&dev->backlight_intensity) );
 	}
 
 	return count;
@@ -1173,7 +1178,7 @@ static ssize_t bootloader_store(struct device *fbdev,
 	struct dlfb_data *dev = fb_info->par;
 pr_info("bootloader_store\n");
 
-        dlfb_set_bootloader( dev );
+    dlfb_set_bootloader( dev );
 
 	return count;
 }
@@ -1253,6 +1258,7 @@ pr_info("vendor_descriptor total_len=%d",total_len );
 		dev->width_mm = le16_to_cpu( *(u16 *)(desc+7) );
 		dev->height_mm = le16_to_cpu( *(u16 *)(desc+9) );
 		dev->display_type = *(desc+11);
+	    atomic_set(&dev->backlight_intensity, backlight);
 
 		pr_info("width=%d, height=%d\n", dev->width,dev->height);
 		pr_info("width_mm=%d, height_mm=%d\n", dev->width_mm,dev->height_mm);
@@ -1473,7 +1479,7 @@ static void dlfb_urb_completion(struct urb *urb)
 	struct urb_node *unode = urb->context;
 	struct dlfb_data *dev = unode->dev;
 	unsigned long flags;
-
+//pr_info("dlfb_urb_completion");
 	/* sync/async unlink faults aren't errors */
 	if (urb->status) {
 		if (!(urb->status == -ENOENT ||
@@ -1634,7 +1640,7 @@ static int dlfb_submit_urb(struct dlfb_data *dev, struct urb *urb, size_t len)
 	int ret;
 
 	BUG_ON(len > dev->urbs.size);
-
+//pr_info("dlfb_submit_urb");
 	urb->transfer_buffer_length = len; /* set to actual payload len */
 	ret = usb_submit_urb(urb, GFP_KERNEL);
 	if (ret) {

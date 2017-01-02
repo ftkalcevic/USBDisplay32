@@ -16,17 +16,26 @@ struct dloarea {
 
 #define RGB(r,g,b) ((uint16_t)(((((r)>>3)&0x1f) << 11) | ((((g)>>2)&0x3f) << 5) | (((b)>>3)&0x1f) ))
 
+struct fb_var_screeninfo vinfo;
+struct fb_fix_screeninfo finfo;
+char *fbp = 0;
 
+void pixel( int x, int y, int c )
+{
+    int location = (x+vinfo.xoffset) * (vinfo.bits_per_pixel/8) +
+                   (y+vinfo.yoffset) * finfo.line_length;
+
+    unsigned short int t = c;
+    *((unsigned short int*)(fbp + location)) = t;
+}
+
+ 
 int main(int argc, char *argv[] )
 {
     int fbfd = 0;
-    struct fb_var_screeninfo vinfo;
-    struct fb_fix_screeninfo finfo;
-    long int screensize = 0;
-    char *fbp = 0;
+   long int screensize = 0;
     int x = 0, y = 0;
     long int location = 0;
-    int i;
 
     // Open the file for reading and writing
     fbfd = open(argv[1], O_RDWR);
@@ -75,8 +84,9 @@ int main(int argc, char *argv[] )
 #define W (vinfo.xres)
 #define H (vinfo.yres)
 
+    struct dloarea area;
+/*
     // Figure out where in memory to put the pixel
-for ( i = 0; i < 1000; i++)
     for ( y = Y; y < Y+H; y++ )
         for ( x = X; x < X+W; x++ ) {
 
@@ -100,31 +110,25 @@ for ( i = 0; i < 1000; i++)
             }
 
         }
-    struct dloarea area;
     area.x = X;
     area.y = Y;
     area.w = W;
     area.h = H;
 
-    //if (ioctl(fbfd, DLFB_IOCTL_REPORT_DAMAGE, &area)) {
-        //printf("Error: failed to damage framebuffer.\n");
-    //}
-if(0)
-    for ( y = 0; y < H - 20; y++ )
-    for ( x = 0; x < W - 20; x++ )
+    if (ioctl(fbfd, DLFB_IOCTL_REPORT_DAMAGE, &area)) {
+        printf("Error: failed to damage framebuffer.\n");
+    }
+*/
+    for ( y = 0; y <= H - 20; y++ )
+    for ( x = 0; x <= W - 20; x++ )
     {
         int i,j;
         for ( i = 0; i < 20; i++ )
             for ( j = 0; j < 20; j++ )
             {
-                location = (x+i+vinfo.xoffset) * (vinfo.bits_per_pixel/8) +
-                           (y+j+vinfo.yoffset) * finfo.line_length;
-
                 char b = 0;
                 char g = 0;
                 char r = 255;
-
-                if ( i == 0 ) { r = 0; g = 255; b=0; }
 
                 if ( vinfo.bits_per_pixel == 32 ) {
                     *(fbp + location) = b;
@@ -135,6 +139,18 @@ if(0)
                     unsigned short int t = RGB(r,g,b);
                     *((unsigned short int*)(fbp + location)) = t;
                 }
+                pixel( x+i, y+j, RGB(r,g,b) );
+            }
+            for ( i = 0; i < 20; i++ )
+            {
+                int c = RGB(255,0,0);
+                pixel( x+i,y,c);
+                pixel( x+i,y+20-1,c);
+                pixel( x,y+i,c);
+                pixel( x+20-1,y+i,c);
+                c = RGB(0,0,255);
+                pixel( x+i,y+i,c);
+                pixel( x+i,y+20-i,c);
             }
         area.x = x;
         area.y = y;
@@ -145,8 +161,9 @@ if(0)
             printf("Error: failed to damage framebuffer.\n");
         }
 
+        getchar();
     }
-getchar();
+
     munmap(fbp, screensize);
     close(fbfd);
     return 0;
