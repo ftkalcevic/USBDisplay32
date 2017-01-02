@@ -79,7 +79,7 @@ UDC_DESC_STORAGE usb_dev_desc_t udc_device_desc = {
 #else
 	.iProduct                  = 0,  // No product string 
 #endif
-#ifdef USB_DEVICE_SERIAL_NAME
+#if defined(USB_DEVICE_SERIAL_NAME) || defined(USB_DEVICE_CHIP_SERIAL_NUMBER)
 	.iSerialNumber = 3,
 #else
 	.iSerialNumber             = 0,  // No serial string 

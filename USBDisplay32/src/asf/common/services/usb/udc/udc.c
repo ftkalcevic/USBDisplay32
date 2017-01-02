@@ -116,14 +116,23 @@ static uint8_t udc_string_serial_name[] = USB_DEVICE_SERIAL_NAME;
 #endif
 
 
+
+#ifdef USB_DEVICE_CHIP_SERIAL_NUMBER
+	#define SERIAL_NUMBER_BITS				(120)
+	#define SERIAL_NUMBER_NUMBER_SIZE		(SERIAL_NUMBER_BITS/4)
+	static uint8_t ChipSerialNumber[SERIAL_NUMBER_NUMBER_SIZE];	// 120 bits, 4 bits per hex char
+#else
+	#define SERIAL_NUMBER_NUMBER_SIZE		0
+#endif
+
 /**
  * \brief USB device string descriptor
  * Structure used to transfer ASCII strings to USB String descriptor structure.
  */
 struct udc_string_desc_t {
 	usb_str_desc_t header;
-	le16_t string[Max(Max(USB_DEVICE_MANUFACTURE_NAME_SIZE, \
-     USB_DEVICE_PRODUCT_NAME_SIZE), USB_DEVICE_SERIAL_NAME_SIZE)];
+	le16_t string[Max(Max(Max(USB_DEVICE_MANUFACTURE_NAME_SIZE, \
+     USB_DEVICE_PRODUCT_NAME_SIZE), USB_DEVICE_SERIAL_NAME_SIZE), SERIAL_NUMBER_NUMBER_SIZE)];
 };
 COMPILER_WORD_ALIGNED
 static UDC_DESC_STORAGE struct udc_string_desc_t udc_string_desc = {
@@ -593,11 +602,30 @@ static bool udc_req_std_dev_get_str_desc(void)
 		str = udc_string_product_name;
 		break;
 #endif
-#ifdef USB_DEVICE_SERIAL_NAME
-	case 3:
-		str_lgt = USB_DEVICE_SERIAL_NAME_SIZE;
-		str = udc_string_serial_name;
-		break;
+#if defined(USB_DEVICE_SERIAL_NAME) || defined(USB_DEVICE_CHIP_SERIAL_NUMBER)
+	#ifdef USB_DEVICE_CHIP_SERIAL_NUMBER
+		case 3:
+		{
+			volatile uint8_t *ptr_ID = AVR32_FLASHC_SERIAL_DATA;
+			
+			int n = 0;
+			for (int i=0; i<SERIAL_NUMBER_BITS/8;i++)
+			{
+#define HEX(x)	( (x) < 10 ? (x) + '0' : (x) + 'A' - 10 )
+				uint8_t id = *(ptr_ID++);
+				ChipSerialNumber[n++] = HEX( ((id >> 4) & 0x0f) );
+				ChipSerialNumber[n++] = HEX( (id & 0x0f) );
+			}
+			str_lgt = sizeof(ChipSerialNumber);
+			str = ChipSerialNumber;
+		}
+			break;
+	#else
+		case 3:
+			str_lgt = USB_DEVICE_SERIAL_NAME_SIZE;
+			str = udc_string_serial_name;
+			break;
+	#endif
 #endif
 	default:
 #ifdef UDC_GET_EXTRA_STRING

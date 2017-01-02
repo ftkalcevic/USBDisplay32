@@ -62,6 +62,7 @@
 //! USB Device string definitions (Optional)
 #define  USB_DEVICE_MANUFACTURE_NAME      "Frank's Workshop"
 #define  USB_DEVICE_PRODUCT_NAME          "USB Display"
+#define  USB_DEVICE_CHIP_SERIAL_NUMBER
 // #define  USB_DEVICE_SERIAL_NAME           "1234"
 
 
@@ -83,8 +84,8 @@
  */
 // #define  UDC_VBUS_EVENT(b_vbus_high)      user_callback_vbus_action(b_vbus_high)
 // #define  UDC_SOF_EVENT()                  user_callback_sof_action()
-// #define  UDC_SUSPEND_EVENT()              user_callback_suspend_action()
-// #define  UDC_RESUME_EVENT()               user_callback_resume_action()
+#define  UDC_SUSPEND_EVENT()              user_callback_suspend_action()
+#define  UDC_RESUME_EVENT()               user_callback_resume_action()
 //! Mandatory when USB_DEVICE_ATTR authorizes remote wakeup feature
 // #define  UDC_REMOTEWAKEUP_ENABLE()        user_callback_remotewakeup_enable()
 // #define  UDC_REMOTEWAKEUP_DISABLE()       user_callback_remotewakeup_disable()
@@ -92,8 +93,9 @@
 //! other than manufacturer, product and serial string
 // #define  UDC_GET_EXTRA_STRING()
 //@}
+extern void user_callback_suspend_action(void);
+extern void user_callback_resume_action(void);
 
-//@}
 
 
 /**

@@ -205,21 +205,21 @@ class LCDHwIface
 			gpio_configure_pin(LCDReset, GPIO_DIR_OUTPUT);
 			gpio_clr_gpio_pin(LCDReset);
 
-			AVR32_SMC.cs[0].SETUP.ncs_rd_setup = 0;
-			AVR32_SMC.cs[0].SETUP.nrd_setup = 0;
-			AVR32_SMC.cs[0].SETUP.ncs_wr_setup = 0;
-			AVR32_SMC.cs[0].SETUP.nwe_setup = 1;
+			AVR32_SMC.cs[0].SETUP.ncs_rd_setup = LCD_NCS_RD_SETUP;
+			AVR32_SMC.cs[0].SETUP.nrd_setup = LCD_NRD_SETUP;
+			AVR32_SMC.cs[0].SETUP.ncs_wr_setup = LCD_NCS_WR_SETUP;
+			AVR32_SMC.cs[0].SETUP.nwe_setup = LCD_NWE_SETUP;
 	
-			AVR32_SMC.cs[0].PULSE.ncs_rd_pulse = 3;
-			AVR32_SMC.cs[0].PULSE.nrd_pulse = 2;
-			AVR32_SMC.cs[0].PULSE.ncs_wr_pulse = 1;
-			AVR32_SMC.cs[0].PULSE.nwe_pulse = 1;
+			AVR32_SMC.cs[0].PULSE.ncs_rd_pulse = LCD_NCS_RD_PULSE;
+			AVR32_SMC.cs[0].PULSE.nrd_pulse = LCD_NRD_PULSE;
+			AVR32_SMC.cs[0].PULSE.ncs_wr_pulse = LCD_NCS_WR_PULSE;
+			AVR32_SMC.cs[0].PULSE.nwe_pulse = LCD_NWE_PULSE;
 	
-			AVR32_SMC.cs[0].CYCLE.nrd_cycle = 2;
-			AVR32_SMC.cs[0].CYCLE.nwe_cycle = 3;
+			AVR32_SMC.cs[0].CYCLE.nrd_cycle = LCD_NRD_CYCLE;
+			AVR32_SMC.cs[0].CYCLE.nwe_cycle = LCD_NWE_CYCLE;
 	
 			AVR32_SMC.cs[0].MODE.ps = 0;		// Page Size - not using
-			AVR32_SMC.cs[0].MODE.pmen = 0;		// Page Mode Enabel = false
+			AVR32_SMC.cs[0].MODE.pmen = 0;		// Page Mode Enable = false
 			AVR32_SMC.cs[0].MODE.tdf_mode = 0;	// TDF optimisation - false
 			AVR32_SMC.cs[0].MODE.tdf_cycles = 0;
 			AVR32_SMC.cs[0].MODE.dbw = 1;		// Data bus width

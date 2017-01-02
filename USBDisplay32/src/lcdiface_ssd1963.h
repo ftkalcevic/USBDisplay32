@@ -89,7 +89,7 @@ protected:
 	//	SetXY(0, 0, 479, 271);
 		DisplayOn(true);
 
-		SetBacklight( 30 );
+		_SetBacklight( 30 );
 
 		WriteCommand(REG_SET_DBC_CONF);
 		WriteData(0x0d);
@@ -107,6 +107,20 @@ public:
 		{
 			WriteCommand(REG_SET_DISPLAY_OFF);		//display off
 		}
+	}
+
+	void Sleep()
+	{
+		//WriteCommand(REG_ENTER_SLEEP_MODE);
+		//delay_ms(5);
+		//WriteCommand(REG_SET_DEEP_SLEEP);
+		//delay_ms(5);
+	}
+
+	void Wake()
+	{
+		//WriteCommand(REG_EXIT_SLEEP_MODE);
+		//delay_ms(120);
 	}
 
 	void GraphicsRamMode(void)
@@ -172,7 +186,7 @@ public:
 		return true; 
 	}
 
-	bool SetBacklight(uint8_t intensity) // A bit of hack to avoid using virtual functions (slight performance gain).
+	bool _SetBacklight(uint8_t intensity) // A bit of hack to avoid using virtual functions (slight performance gain).
 	{ 
 		// the itead 4.3 doesn't appear to have back light control.
 		return true;

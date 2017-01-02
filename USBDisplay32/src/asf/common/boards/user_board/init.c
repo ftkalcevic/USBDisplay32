@@ -91,7 +91,7 @@ static void InitClocks( void )
 
 static void InitBacklightPWM( void )
 {
-#define NOPWM
+//#define NOPWM
 #ifdef NOPWM
 	gpio_enable_gpio_pin(LCD_BACKLIGHT_PWM);
 

@@ -88,7 +88,18 @@ protected:
 public:
 	void DisplayOn( bool on )
 	{
-		//Command(REG_DISP_CTRL1, on ? DISP_CTRL1_BASEE : 0 );
+		//if ( on )
+			//Command( REG_DisplayControl2, 0x3C );
+		//else
+			//Command( REG_DisplayControl2, 0x34 );
+	}
+
+	void Sleep()
+	{
+	}
+
+	void Wake()
+	{
 	}
 
 	void GraphicsRamMode(void)
@@ -117,10 +128,10 @@ public:
 	// Note - the rectangle end point is included in the window size, eg a display of width 400, will have x1=0,x2=399
 	void SetWindow(unsigned int x1,unsigned int y1,unsigned int x2,unsigned int y2)
 	{
-		Command(REG_RowAddressStart1, 0);
-		Command(REG_RowAddressStart2, y1);
-		Command(REG_RowAddressEnd1, 0);
-		Command(REG_RowAddressEnd2, y2);
+		Command(REG_RowAddressStart1, y1 >> 8);
+		Command(REG_RowAddressStart2, y1 & 0xFF);
+		Command(REG_RowAddressEnd1, y2 >> 8);
+		Command(REG_RowAddressEnd2, y2 & 0xFF);
 		Command(REG_ColumnAddressStart1, x1 >> 8 );
 		Command(REG_ColumnAddressStart2, x1 & 0xFF );
 		Command(REG_ColumnAddressEnd1, x2 >> 8 );
@@ -149,6 +160,6 @@ public:
 		return false;
 	}
 
-	bool SetBacklight(uint8_t intensity) { return false; }	// A bit of hack to avoid using virtual functions (slight performance gain).
+	bool _SetBacklight(uint8_t intensity) { return false; }	// A bit of hack to avoid using virtual functions (slight performance gain).
 
 };

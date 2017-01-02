@@ -1,7 +1,7 @@
 #pragma  once
 
-//#define ITDB02_32WD
-#define ITDB02_43
+#define ITDB02_32WD
+//#define ITDB02_43
 
 #ifdef ITDB02_32WD
 
@@ -12,6 +12,20 @@
 #define SCREEN_HEIGHT_MM	42
 
 #define RGB(r,g,b) ((uint16_t)(((((r)>>3)&0x1f) << 11) | ((((g)>>2)&0x3f) << 5) | (((b)>>3)&0x1f) ))
+
+// EBI SMC timings
+#define LCD_NCS_RD_SETUP		0
+#define LCD_NCS_RD_PULSE		3
+#define LCD_NRD_SETUP			0
+#define LCD_NRD_PULSE			2
+#define LCD_NRD_CYCLE			2
+
+#define LCD_NCS_WR_SETUP		0
+#define LCD_NCS_WR_PULSE		1
+#define LCD_NWE_SETUP			2
+#define LCD_NWE_PULSE			2
+//          NWE_HOLD			2
+#define LCD_NWE_CYCLE			6
 
 #define TLCD		LCDIFace<LCDIFaceHX8352A<SCREEN_WIDTH,SCREEN_HEIGHT>,SCREEN_WIDTH,SCREEN_HEIGHT>	
 #define TLCDText	LCDText< LCDIFace<LCDIFaceHX8352A<SCREEN_WIDTH,SCREEN_HEIGHT>,SCREEN_WIDTH,SCREEN_HEIGHT>, SCREEN_WIDTH, SCREEN_HEIGHT >	
@@ -30,6 +44,20 @@
 
 #define TLCD		LCDIFace<LCDIFaceSSD1963<SCREEN_WIDTH,SCREEN_HEIGHT>,SCREEN_WIDTH,SCREEN_HEIGHT>	
 #define TLCDText	LCDText< LCDIFace<LCDIFaceSSD1963<SCREEN_WIDTH,SCREEN_HEIGHT>,SCREEN_WIDTH,SCREEN_HEIGHT>, SCREEN_WIDTH, SCREEN_HEIGHT >	
+
+// EBI SMC timings
+#define LCD_NCS_RD_SETUP		0
+#define LCD_NCS_RD_PULSE		3
+#define LCD_NRD_SETUP			0
+#define LCD_NRD_PULSE			2
+#define LCD_NRD_CYCLE			2
+
+#define LCD_NCS_WR_SETUP		0
+#define LCD_NCS_WR_PULSE		1
+#define LCD_NWE_SETUP			1
+#define LCD_NWE_PULSE			1
+//          NWE_HOLD			1
+#define LCD_NWE_CYCLE			3
 
 #endif
 

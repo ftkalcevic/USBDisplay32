@@ -31,12 +31,12 @@
 
 
 #include "../fonts/Font6x13.h"
-#include "../fonts/FontTypewriter.h"
+//#include "../fonts/FontTypewriter.h"
 
 static struct SFontData  fontData[] =
 {
 	/*45x17*/    { FONT6X13_WIDTH, FONT6X13_HEIGHT, SCREEN_WIDTH / FONT6X13_WIDTH, SCREEN_HEIGHT / FONT6X13_HEIGHT, Font6x13 },
-	/*22x9 */    { FONTTYPEWRITER_WIDTH, FONTTYPEWRITER_HEIGHT, SCREEN_WIDTH / FONTTYPEWRITER_WIDTH, SCREEN_HEIGHT / FONTTYPEWRITER_HEIGHT, FontTypewriter },
+//	/*22x9 */    { FONTTYPEWRITER_WIDTH, FONTTYPEWRITER_HEIGHT, SCREEN_WIDTH / FONTTYPEWRITER_WIDTH, SCREEN_HEIGHT / FONTTYPEWRITER_HEIGHT, FontTypewriter },
 };
 
 
@@ -82,6 +82,18 @@ int _write(int file, char *ptr, int len)
 
 static void DisplayTest(void)
 {
+	{
+		for ( uint16_t y = 0; y <= SCREEN_WIDTH-20; y++ )
+			for ( uint16_t x = 0; x <= SCREEN_WIDTH-20; x++ )
+			{
+				lcd.BltStart( x,y,20,20 );
+				for (uint32_t i = 0; i < 20*20; i++)
+				{
+					lcd.WriteData(RGB( i & 1 ? 0xFF : 0, i & 1 ? 0 : 0xff,0));
+				}
+				//delay_ms(100);
+			}
+	}
 	{
 		uint8_t y=10;
 		for ( uint16_t w = 1; w <= 10; w++ )
@@ -602,14 +614,48 @@ static void speedtest2( void )
 	DisplayStartupMsg();
 }
 
+static volatile bool bSuspend;
+static volatile bool bResume;
+
+void Suspend(void)
+{
+	bSuspend = false;
+	//lcd.ClearScreen(RGB(0,0,0));
+	//lcd.DisplayOn(false);
+	//lcd.SetBacklight(0);
+	//lcd.Sleep();
+}
+
+void user_callback_suspend_action(void)
+{
+	bSuspend = true;
+}
+
+static void Resume(void)
+{
+	bResume = false;
+	//lcd.Wake();
+	//lcd.DisplayOn(true);
+	//lcd.ClearScreen(RGB(0,0,0));
+	//lcd.SetBacklight(50);
+}
+
+
+void user_callback_resume_action(void)
+{
+	bResume = true;
+}
 
 int main (void)
 {
+	bSuspend = bResume = false;
+
     board_init();
     lcd.Init();
-	
+
 	//DisplayTest();
     //speedtest();
+    //speedtest2();
 
     //lcd.SetBacklight( 100 );
 	//lcd.ClearScreen(RGB(0,0,0));
@@ -664,8 +710,10 @@ int main (void)
 			s[sizeof(s)-1]=0;
 			lcdtext.SetTextCursor(0,1);
 			lcdtext.WriteString(s);
-			uint16_t x = (touch_y >> 6);
-			uint8_t y = SCREEN_HEIGHT - (touch_x >> 7);
+			uint16_t x = (touch_x >> 7);
+			uint8_t y = (touch_y >> 7);
+			if ( x > SCREEN_WIDTH ) x = SCREEN_WIDTH - 1;
+			if ( y > SCREEN_HEIGHT ) x = SCREEN_HEIGHT - 1;
 			lcd.DrawPixel( x, y );
 		}
 		//delay_ms(1);
@@ -673,6 +721,10 @@ int main (void)
         //char s[30];
         //sprintf( s, "%d\n", bytes_read );
         //serial_write_string(&DEVICE_USART, s);
+
+		if ( bSuspend ) Suspend();
+		if ( bResume ) Resume();
+
     }
 
 /*	
