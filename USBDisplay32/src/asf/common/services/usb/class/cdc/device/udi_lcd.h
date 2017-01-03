@@ -36,8 +36,8 @@
  * DAMAGE.
  */
 
-#ifndef _UDI_CDC_H_
-#define _UDI_CDC_H_
+#ifndef _UDI_LCD_H_
+#define _UDI_LCD_H_
 
 #include "conf_usb.h"
 #include "usb_protocol.h"
@@ -49,12 +49,6 @@
 extern "C" {
 #endif
 
-/**
- * \ingroup udi_group
- * \defgroup udi_cdc_group UDI for Communication Device Class
- *
- * @{
- */
 
 /**
  * \name Interface Descriptor
@@ -68,53 +62,22 @@ extern "C" {
 
 
 /**
- * \brief Communication Class interface descriptor
+ * \brief LCD Class interface descriptor
  *
- * Interface descriptor with associated functional and endpoint
- * descriptors for the CDC Communication Class interface.
  */
 typedef struct {
 	//! Standard interface descriptor
 	usb_iface_desc_t iface;
 	//! endpoint descriptor
 	usb_ep_desc_t ep_out;
-} udi_cdc_comm_desc_t;
+} udi_lcd_iface_desc_t;
 
 
-
-//! By default no string associated to these interfaces
-#ifndef UDI_CDC_IAD_STRING_ID
-#define UDI_CDC_IAD_STRING_ID   0
-#endif
-#ifndef UDI_CDC_COMM_STRING_ID
-#define UDI_CDC_COMM_STRING_ID   0
-#endif
-#ifndef UDI_CDC_DATA_STRING_ID
-#define UDI_CDC_DATA_STRING_ID   0
-#endif
-
-//! CDC communication enpoints size for all speed
-#define UDI_CDC_COMM_EP_SIZE        64
-//! CDC data enpoints size for all speed (no need to use 512B for HS)
+//!  data enpoints size for all speed (no need to use 512B for HS)
 #ifdef USB_DEVICE_HS_SUPPORT
-    #define UDI_CDC_DATA_EPS_SIZE       512
+    #define UDI_LCD_DATA_EPS_SIZE       512
 #else
-    #define UDI_CDC_DATA_EPS_SIZE       64
-#endif
-
-#ifndef UDI_CDC_MULTIPLE
-//! Fill field including interface numbers
-#  define UDI_CDC_COMM_DESC_IFACE      \
-   .iface.bInterfaceNumber       = UDI_CDC_COMM_IFACE_NUMBER,\
-   .call_mgmt.bDataInterface     = UDI_CDC_DATA_IFACE_NUMBER,\
-   .union_desc.bMasterInterface  = UDI_CDC_COMM_IFACE_NUMBER,\
-   .union_desc.bSlaveInterface0  = UDI_CDC_DATA_IFACE_NUMBER,
-#  define UDI_CDC_DATA_DESC_IFACE     \
-   .iface.bInterfaceNumber       = UDI_CDC_DATA_IFACE_NUMBER,
-#else
-//! TODO for multiple CDC interface
-#  define UDI_CDC_COMM_DESC_IFACE
-#  define UDI_CDC_DATA_DESC_IFACE
+    #define UDI_LCD_DATA_EPS_SIZE       64
 #endif
 
 #define	LCD_DISPLAY_CLASS		0xFF
@@ -127,7 +90,7 @@ typedef struct {
 #define  UDI_LCD_DATA_EP_OUT           (2 | USB_EP_DIR_OUT)	// RX
 
 //! Content of CDC COMM interface descriptor for all speed
-#define UDI_CDC_COMM_DESC        {\
+#define UDI_LCD_IFACE_DESC        {\
    .iface.bInterfaceNumber       = UDI_LCD_IFACE_NUMBER, \
    .iface.bLength                = sizeof(usb_iface_desc_t),\
    .iface.bDescriptorType        = USB_DT_INTERFACE,\
@@ -140,7 +103,7 @@ typedef struct {
    .ep_out.bLength               = sizeof(usb_ep_desc_t),\
    .ep_out.bDescriptorType       = USB_DT_ENDPOINT,\
    .ep_out.bEndpointAddress      = UDI_LCD_DATA_EP_OUT,\
-   .ep_out.wMaxPacketSize        = LE16(UDI_CDC_DATA_EPS_SIZE),\
+   .ep_out.wMaxPacketSize        = LE16(UDI_LCD_DATA_EPS_SIZE),\
    .ep_out.bmAttributes          = USB_EP_TYPE_BULK,\
    .ep_out.bInterval             = 1,\
    }
@@ -157,7 +120,7 @@ typedef struct {
 }
 
 //! Global struture which contains standard UDI API for UDC
-extern UDC_DESC_STORAGE udi_api_t udi_api_cdc_data;
+extern UDC_DESC_STORAGE udi_api_t udi_api_lcd_data;
 
 
 /**
@@ -165,10 +128,10 @@ extern UDC_DESC_STORAGE udi_api_t udi_api_cdc_data;
  *
  * \return \c 1 if a byte is ready to be read.
  */
-bool udi_cdc_is_rx_ready(void);
+bool udi_lcd_is_rx_ready(void);
 
 
 #ifdef __cplusplus
 }
 #endif
-#endif // _UDI_CDC_H_
+#endif 

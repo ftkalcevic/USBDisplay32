@@ -66,9 +66,8 @@ extern "C" {
 #include <intc.h>
 #include <tc.h>
 #include <ctrl_access.h>
-#include <udi_cdc.h>
+#include <udi_lcd.h>
 #include <serial.h>
-#include <udi_msc.h>
 #include <wdt.h>
 #include <spi.h>
 #include <spi_master.h>

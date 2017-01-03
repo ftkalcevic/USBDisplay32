@@ -96,45 +96,15 @@
 extern void user_callback_suspend_action(void);
 extern void user_callback_resume_action(void);
 
-
-
-/**
- * USB Interface Configuration
- * @{
- */
 /**
  * Configuration of CDC interface
  * @{
  */
 //! Interface callback definition
-#define  UDI_CDC_ENABLE_EXT()             true
-#define  UDI_CDC_DISABLE_EXT()            
-#define  UDI_CDC_RX_NOTIFY()              
-#define  UDI_CDC_SET_CODING_EXT(cfg)      
-#define  UDI_CDC_SET_DTR_EXT(set)         
-#define  UDI_CDC_SET_RTS_EXT(set)
+#define  UDI_LCD_RX_NOTIFY()              
 
-//! Define it when the transfer CDC Device to Host is a low rate (<512000 bauds)
-//! to reduce CDC buffers size
-//#define  UDI_CDC_LOW_RATE
-
-//! Default configuration of communication port
-#define  UDI_CDC_DEFAULT_RATE             115200
-#define  UDI_CDC_DEFAULT_STOPBITS         CDC_STOP_BITS_1
-#define  UDI_CDC_DEFAULT_PARITY           CDC_PAR_NONE
-#define  UDI_CDC_DEFAULT_DATABITS         8
-//@}
-//@}
-
-//#define USE_USB_DMA
-
-/**
- * USB Device Driver Configuration    
- * @{
- */
-//@}
 
 //! The includes of classes and other headers must be done at the end of this file to avoid compile error
-#include "udi_cdc_conf.h"
+#include "udi_lcd_conf.h"
 
 #endif // _CONF_USB_H_

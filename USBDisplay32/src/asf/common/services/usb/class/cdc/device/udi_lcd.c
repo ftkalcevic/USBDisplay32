@@ -1,7 +1,7 @@
 /**
  * \file
  *
- * \brief USB Device Communication Device Class (CDC) interface.
+ * \brief USB Device LCD interface.
  *
  * Copyright (C) 2009 Atmel Corporation. All rights reserved.
  *
@@ -41,7 +41,7 @@
 #include "usb_protocol.h"
 #include "udd.h"
 #include "udc.h"
-#include "udi_cdc.h"
+#include "udi_lcd.h"
 #include <string.h>
 
 
@@ -49,51 +49,42 @@
 #include "user_board.h"
 #include "lcd_conf.h"
 
-#ifdef UDI_CDC_LOW_RATE
-#  define UDI_CDC_TX_BUFFERS     (2)
-#	define UDI_CDC_RX_BUFFERS     (2)
+#ifdef UDI_LCD_LOW_RATE
+#  define UDI_LCD_TX_BUFFERS     (2)
+#	define UDI_LCD_RX_BUFFERS     (2)
 #else
 #  ifdef USB_DEVICE_HS_SUPPORT
-#    define UDI_CDC_TX_BUFFERS     (2)
-#	  define UDI_CDC_RX_BUFFERS     (2)
+#    define UDI_LCD_TX_BUFFERS     (2)
+#	  define UDI_LCD_RX_BUFFERS     (2)
 #  else
-#    define UDI_CDC_TX_BUFFERS     (2)
-#	  define UDI_CDC_RX_BUFFERS     (2)
+#    define UDI_LCD_TX_BUFFERS     (2)
+#	  define UDI_LCD_RX_BUFFERS     (2)
 #  endif
 #endif
 
 #define NEXT_BUFFER(idx) ((idx==0)?1:0)
-//#define NEXT_BUFFER(idx) ((idx==UDI_CDC_RX_BUFFERS-1)?0:idx+1)
-/**
- * \addtogroup udi_cdc_group
- *
- * @{
- */
-
-/**
- * \name Interface for UDC
- */
-//@{
-
-bool udi_cdc_data_enable(void);
-void udi_cdc_data_disable(void);
-bool udi_cdc_data_setup(void);
-uint8_t udi_cdc_getsetting(void);
-void udi_cdc_data_sof_notify(void);
+//#define NEXT_BUFFER(idx) ((idx==UDI_LCD_RX_BUFFERS-1)?0:idx+1)
 
 
-UDC_DESC_STORAGE udi_api_t udi_api_cdc_data = {
-	.enable = udi_cdc_data_enable,
-	.disable = udi_cdc_data_disable,
-	.setup = udi_cdc_data_setup,
-	.getsetting = udi_cdc_getsetting,
-	.sof_notify = 	udi_cdc_data_sof_notify,
+bool udi_lcd_data_enable(void);
+void udi_lcd_data_disable(void);
+bool udi_lcd_data_setup(void);
+uint8_t udi_lcd_getsetting(void);
+void udi_lcd_data_sof_notify(void);
+
+
+UDC_DESC_STORAGE udi_api_t udi_api_lcd_data = {
+	.enable = udi_lcd_data_enable,
+	.disable = udi_lcd_data_disable,
+	.setup = udi_lcd_data_setup,
+	.getsetting = udi_lcd_getsetting,
+	.sof_notify = 	udi_lcd_data_sof_notify,
 };
 
 //@}
 
-//! Status of CDC interface
-static volatile bool udi_cdc_running;
+//! Status of LCD interface
+static volatile bool udi_lcd_running;
 
 /**
  * \name Variables to manage RX/TX transfer requests
@@ -104,25 +95,20 @@ static volatile bool udi_cdc_running;
 typedef union _RXBuffer
 {
     CmdAll cmd;
-    uint8_t buf[UDI_CDC_DATA_EPS_SIZE];
+    uint8_t buf[UDI_LCD_DATA_EPS_SIZE];
 } RXBuffer;
 
 //! Buffer to receive data
-COMPILER_WORD_ALIGNED static RXBuffer rx_buffer[UDI_CDC_RX_BUFFERS];
+COMPILER_WORD_ALIGNED static RXBuffer rx_buffer[UDI_LCD_RX_BUFFERS];
 //! Data available in RX buffers
-static uint16_t udi_cdc_rx_buf_nb[UDI_CDC_RX_BUFFERS];
+static uint16_t udi_lcd_rx_buf_nb[UDI_LCD_RX_BUFFERS];
 //! Give the current RX buffer used (rx0 if 0, rx1 if 1)
-static volatile uint8_t udi_cdc_rx_buf_sel;
+static volatile uint8_t udi_lcd_rx_buf_sel;
 //! Read position in current RX buffer
-static volatile uint16_t udi_cdc_rx_pos;
-static volatile uint32_t udi_cdc_blt_bytes_to_go;
+static volatile uint16_t udi_lcd_rx_pos;
+static volatile uint32_t udi_lcd_blt_bytes_to_go;
 //! Signal a transfer on-going
-static volatile bool udi_cdc_rx_trans_ongoing;
-
-//! Define a transfer halted
-#define  UDI_CDC_TRANS_HALTED    2
-
-//@}
+static volatile bool udi_lcd_rx_trans_ongoing;
 
 
 /**
@@ -132,7 +118,7 @@ static volatile bool udi_cdc_rx_trans_ongoing;
  *
  * \return \c 1 if function was successfully done, otherwise \c 0.
  */
-static bool udi_cdc_rx_start(void);
+static bool udi_lcd_rx_start(void);
 
 /**
  * \brief Update RX buffer management with a new data
@@ -142,41 +128,41 @@ static bool udi_cdc_rx_start(void);
  * \param status     UDD_EP_TRANSFER_ABORT, if transfer aborted
  * \param n          number of data received
  */
-void udi_cdc_data_recevied(udd_ep_status_t status, iram_size_t n);
+void udi_lcd_data_recevied(udd_ep_status_t status, iram_size_t n);
 
 
 
-bool udi_cdc_data_enable(void)
+bool udi_lcd_data_enable(void)
 {
 	// Initialize RX management
-	udi_cdc_rx_trans_ongoing = false;
-	udi_cdc_rx_buf_sel = 0;
-	udi_cdc_rx_buf_nb[0] = 0;
-	udi_cdc_rx_pos = 0;
-	udi_cdc_blt_bytes_to_go = 0;
-	udi_cdc_running = udi_cdc_rx_start();
-	return udi_cdc_running;
+	udi_lcd_rx_trans_ongoing = false;
+	udi_lcd_rx_buf_sel = 0;
+	udi_lcd_rx_buf_nb[0] = 0;
+	udi_lcd_rx_pos = 0;
+	udi_lcd_blt_bytes_to_go = 0;
+	udi_lcd_running = udi_lcd_rx_start();
+	return udi_lcd_running;
 }
 
 
-void udi_cdc_data_disable(void)
+void udi_lcd_data_disable(void)
 {
 }
 
 
-bool udi_cdc_data_setup(void)
+bool udi_lcd_data_setup(void)
 {
 	return false;  // request Not supported
 }
 
-uint8_t udi_cdc_getsetting(void)
+uint8_t udi_lcd_getsetting(void)
 {
-	return 0;      // CDC don't have multiple alternate setting
+	return 0;      // don't have multiple alternate setting
 }
 
-void udi_cdc_data_sof_notify(void)
+void udi_lcd_data_sof_notify(void)
 {
-	//udi_cdc_tx_send();
+	//udi_lcd_tx_send();
 }
 
 //-------------------------------------------------
@@ -187,40 +173,40 @@ void udi_cdc_data_sof_notify(void)
 //------- Internal routines to process data transfer
 
 
-static bool udi_cdc_rx_start(void)
+static bool udi_lcd_rx_start(void)
 {
 	irqflags_t flags;
 	uint8_t buf_sel_trans;
 
 	flags = cpu_irq_save();
-	buf_sel_trans = udi_cdc_rx_buf_sel;
-	if (udi_cdc_rx_trans_ongoing ||
-		(udi_cdc_rx_pos < udi_cdc_rx_buf_nb[buf_sel_trans])) {
+	buf_sel_trans = udi_lcd_rx_buf_sel;
+	if (udi_lcd_rx_trans_ongoing ||
+		(udi_lcd_rx_pos < udi_lcd_rx_buf_nb[buf_sel_trans])) {
 		// Transfer already on-going or current buffer no empty
 		cpu_irq_restore(flags);
 		return false;
 	}
 
 	// Change current buffer
-	udi_cdc_rx_pos = 0;
-	udi_cdc_rx_buf_sel = NEXT_BUFFER(buf_sel_trans);
+	udi_lcd_rx_pos = 0;
+	udi_lcd_rx_buf_sel = NEXT_BUFFER(buf_sel_trans);
 
 	// Start transfer on RX
-	udi_cdc_rx_trans_ongoing = true;
+	udi_lcd_rx_trans_ongoing = true;
 	cpu_irq_restore(flags);
 	
-	if (udi_cdc_is_rx_ready()) {
-		UDI_CDC_RX_NOTIFY();
+	if (udi_lcd_is_rx_ready()) {
+		UDI_LCD_RX_NOTIFY();
 	}
 
-	if ( udi_cdc_blt_bytes_to_go == 0 )
+	if ( udi_lcd_blt_bytes_to_go == 0 )
 	{
 		// read next command
 	    return udd_ep_run( UDI_LCD_DATA_EP_OUT,
 					    true,
 					    rx_buffer[buf_sel_trans].buf,
-					    UDI_CDC_DATA_EPS_SIZE,
-					    udi_cdc_data_recevied);
+					    UDI_LCD_DATA_EPS_SIZE,
+					    udi_lcd_data_recevied);
 	}
 	else
 	{
@@ -228,13 +214,13 @@ static bool udi_cdc_rx_start(void)
 	    return udd_ep_run( UDI_LCD_DATA_EP_OUT,
 					    true,
 					    LCD_DATA,
-					    UDI_CDC_DATA_EPS_SIZE,
-					    udi_cdc_data_recevied);
+					    UDI_LCD_DATA_EPS_SIZE,
+					    udi_lcd_data_recevied);
 	}						
 }
 
 
-void udi_cdc_data_recevied(udd_ep_status_t status, iram_size_t n)
+void udi_lcd_data_recevied(udd_ep_status_t status, iram_size_t n)
 {
 	uint8_t buf_sel_trans;
 
@@ -243,15 +229,15 @@ void udi_cdc_data_recevied(udd_ep_status_t status, iram_size_t n)
 		return;
 	}
 	
-	buf_sel_trans = NEXT_BUFFER(udi_cdc_rx_buf_sel);
-	if ( udi_cdc_blt_bytes_to_go == 0 )
+	buf_sel_trans = NEXT_BUFFER(udi_lcd_rx_buf_sel);
+	if ( udi_lcd_blt_bytes_to_go == 0 )
 	{
 		// New cmd
 		if ( rx_buffer[buf_sel_trans].cmd.blt.cmd == CMD_BITBLT )
 		{
-			udi_cdc_blt_bytes_to_go = rx_buffer[buf_sel_trans].cmd.blt.width;
-			udi_cdc_blt_bytes_to_go *= rx_buffer[buf_sel_trans].cmd.blt.height;
-			udi_cdc_blt_bytes_to_go *= 2;
+			udi_lcd_blt_bytes_to_go = rx_buffer[buf_sel_trans].cmd.blt.width;
+			udi_lcd_blt_bytes_to_go *= rx_buffer[buf_sel_trans].cmd.blt.height;
+			udi_lcd_blt_bytes_to_go *= 2;
 			
 			LCD_BltStart(rx_buffer[buf_sel_trans].cmd.bltrle.x, rx_buffer[buf_sel_trans].cmd.bltrle.y, rx_buffer[buf_sel_trans].cmd.bltrle.width, rx_buffer[buf_sel_trans].cmd.bltrle.height );
 		}
@@ -284,18 +270,18 @@ void udi_cdc_data_recevied(udd_ep_status_t status, iram_size_t n)
 	else
 	{
 		// Receive data.  That should have been copied via DMA.
-		udi_cdc_blt_bytes_to_go -= n;
+		udi_lcd_blt_bytes_to_go -= n;
 	}
 
-	udi_cdc_rx_buf_nb[buf_sel_trans] = 0;
-	udi_cdc_rx_trans_ongoing = false;
-	udi_cdc_rx_start();
+	udi_lcd_rx_buf_nb[buf_sel_trans] = 0;
+	udi_lcd_rx_trans_ongoing = false;
+	udi_lcd_rx_start();
 }
 
 
-bool udi_cdc_is_rx_ready(void)
+bool udi_lcd_is_rx_ready(void)
 {
-	return (udi_cdc_rx_pos < udi_cdc_rx_buf_nb[udi_cdc_rx_buf_sel]);
+	return (udi_lcd_rx_pos < udi_lcd_rx_buf_nb[udi_lcd_rx_buf_sel]);
 }
 
 
