@@ -1,9 +1,10 @@
 /*
- * usbfb.c -- Framebuffer driver for DisplayLink USB controller
+ * usbfb.c -- Framebuffer driver for USB Frame Buffer LCD
  *
  * Copyright (C) 2009 Roberto De Ioris <roberto@unbit.it>
  * Copyright (C) 2009 Jaya Kumar <jayakumar.lkml@gmail.com>
  * Copyright (C) 2009 Bernie Thompson <bernie@plugable.com>
+ * Copyright (C) 2017 Frank Tkalcevic <frank@franksworkshop.com.au>
  *
  * This file is subject to the terms and conditions of the GNU General Public
  * License v2. See the file COPYING in the main directory of this archive for
@@ -14,6 +15,12 @@
  *
  * Device-specific portions based on information from Displaylink, with work
  * from Florian Echtler, Henrik Bjerregaard Pedersen, and others.
+ */
+
+/*
+ * This is a copy of dlfb.c, modified to be used for a simple USB Framebuffer LCD.
+ * There's no real smarts in this version - raw data is just blted to the LCD - no
+ * compression.
  */
 
 #define pr_fmt(fmt) "usbfb: " fmt
@@ -33,8 +40,8 @@
 #include <linux/sysfs.h>
 #include "usbfb.h"
 
-
-#define ENDPOINT_NO 2
+// Todo read this from the interface
+#define ENDPOINT_NO 1
 
 
 static struct fb_fix_screeninfo dlfb_fix = {
@@ -47,10 +54,13 @@ static struct fb_fix_screeninfo dlfb_fix = {
 	.accel =        FB_ACCEL_NONE,
 };
 
-static const u32 usbfb_info_flags = FBINFO_DEFAULT | FBINFO_READS_FAST |
-		FBINFO_VIRTFB |
-		FBINFO_HWACCEL_IMAGEBLIT | FBINFO_HWACCEL_FILLRECT |
-		FBINFO_HWACCEL_COPYAREA | FBINFO_MISC_ALWAYS_SETPAR;
+static const u32 usbfb_info_flags = FBINFO_DEFAULT | 
+                                    FBINFO_READS_FAST |
+	                            FBINFO_VIRTFB |
+                                    FBINFO_HWACCEL_IMAGEBLIT | 
+                                    FBINFO_HWACCEL_FILLRECT |
+		                    FBINFO_HWACCEL_COPYAREA | 
+                                    FBINFO_MISC_ALWAYS_SETPAR;
 
 /*
  * Match the VID/PID of the USBDisplay32 device.
@@ -59,10 +69,10 @@ static struct usb_device_id id_table[] = {
 	{.idVendor = 0x1C40,
          .idProduct = 0x04DC,
          .bInterfaceClass = 0xff,
-         .bInterfaceSubClass = 0x00,
-         .bInterfaceProtocol = 0x00,
+         .bInterfaceSubClass = 0xFF,
+         .bInterfaceProtocol = 0xFF,
 	 .match_flags = USB_DEVICE_ID_MATCH_VENDOR |
-				USB_DEVICE_ID_MATCH_PRODUCT |
+		USB_DEVICE_ID_MATCH_PRODUCT |
                 USB_DEVICE_ID_MATCH_INT_CLASS |
                 USB_DEVICE_ID_MATCH_INT_SUBCLASS |
                 USB_DEVICE_ID_MATCH_INT_PROTOCOL,
@@ -77,22 +87,6 @@ static bool fb_defio = true;  /* Detect mmap writes using page faults */
 static bool shadow = true; /* Optionally disable shadow framebuffer */
 static int backlight = 80; /* Default backlight intensity 0-100 */
 
-
-DEFINE_SEMAPHORE(register_fb_lock);
-static void lock_register_fb(void)
-{
-    pr_err("lock_register_fb\n");
-    down( &register_fb_lock );
-    pr_err("lock_register_fb:down\n");
-}
-static void unlock_register_fb(void)
-{
-    pr_err("unlock_register_fb\n");
-    up( &register_fb_lock );
-    pr_err("unlock_register_fb:up\n");
-}
-EXPORT_SYMBOL_GPL(unlock_register_fb);
-EXPORT_SYMBOL_GPL(lock_register_fb);
 
 /* dlfb keeps a list of urbs for efficient bulk transfers */
 static void dlfb_urb_completion(struct urb *urb);
@@ -110,6 +104,9 @@ static int dlfb_set_bootloader( struct dlfb_data *dev )
 	int writesize;
 	struct urb *urb;
 
+        pr_info("Switching to bootloader mode - "
+                "use atmel tools to upload new firmware\n");
+
 	if (!atomic_read(&dev->usb_active))
 		return -EPERM;
 
@@ -120,6 +117,7 @@ static int dlfb_set_bootloader( struct dlfb_data *dev )
 	buf = (char *) urb->transfer_buffer;
         wrptr = buf;
 
+        // Load the command and magic check number
 	*wrptr++ = 0x8D;
 	*wrptr++ = 0x70;
 	*wrptr++ = 0x74;
@@ -219,68 +217,68 @@ int dlfb_handle_damage(struct dlfb_data *dev, int x, int y,
 		return -EINVAL;
 
 	if (!atomic_read(&dev->usb_active))
-        return 0;
+            return 0;
 
 	urb = dlfb_get_urb(dev);
 	if (!urb)
-        return 0;
+            return 0;
 	cmd = urb->transfer_buffer;
 	bytes_sent = 0;
-        
-
-    *cmd++ = 0x8b;
-    *cmd++ = (x >> 8) & 0xFF;
-    *cmd++ = x & 0xFF;
-    *cmd++ = (y >> 8) & 0xFF;
-    *cmd++ = y & 0xFF;
-    *cmd++ = (width >> 8) & 0xFF;
-    *cmd++ = width & 0xFF;
-    *cmd++ = (height >> 8) & 0xFF;
-    *cmd++ = height & 0xFF;
-    bytes_sent = 9;
-    ret = dlfb_submit_urb(dev, urb, bytes_sent);
+       
+        // TODO - Use byte order safe macros
+        *cmd++ = 0x8b;
+        *cmd++ = (x >> 8) & 0xFF;
+        *cmd++ = x & 0xFF;
+        *cmd++ = (y >> 8) & 0xFF;
+        *cmd++ = y & 0xFF;
+        *cmd++ = (width >> 8) & 0xFF;
+        *cmd++ = width & 0xFF;
+        *cmd++ = (height >> 8) & 0xFF;
+        *cmd++ = height & 0xFF;
+        bytes_sent = 9;
+        ret = dlfb_submit_urb(dev, urb, bytes_sent);
          
 	urb = dlfb_get_urb(dev);
 	if (!urb)
-        return 0;
+                return 0;
 	cmd = urb->transfer_buffer;
 	bytes_sent = 0;
 
-    for (i = y; i < y + height ; i++) 
-    {
-        const int line_offset = dev->info->fix.line_length * i;
-        const int byte_offset = line_offset + (x * BPP);
-
-        char *pixels = (char *) dev->info->fix.smem_start;
-        pixels += byte_offset;
-        for ( j = 0; j < width; j++ )
+        for (i = y; i < y + height ; i++) 
         {
-            char b2 = *(pixels++);
-            char b1 = *(pixels++);
-            *cmd++ = b1;
-            *cmd++ = b2;
-            bytes_sent += 2;
+                const int line_offset = dev->info->fix.line_length * i;
+                const int byte_offset = line_offset + (x * BPP);
 
-            if ( bytes_sent >= MAX_TRANSFER )
-            {
-                // Full buffer
-                ret = dlfb_submit_urb(dev, urb, bytes_sent);
-
-                urb = dlfb_get_urb(dev);
-                if (!urb)
+                char *pixels = (char *) dev->info->fix.smem_start;
+                pixels += byte_offset;
+                for ( j = 0; j < width; j++ )
                 {
-                    pr_warn( "No urb to complete damage transfer\n" );
-                    return 0;
-                }   
-                cmd = urb->transfer_buffer;
-                bytes_sent = 0;
-            }
+                        char b2 = *(pixels++);
+                        char b1 = *(pixels++);
+                        *cmd++ = b1;
+                        *cmd++ = b2;
+                        bytes_sent += 2;
+
+                        if ( bytes_sent >= MAX_TRANSFER )
+                        {
+                                // Full buffer
+                                ret = dlfb_submit_urb(dev, urb, bytes_sent);
+
+                                urb = dlfb_get_urb(dev);
+                                if (!urb)
+                                {
+                                        pr_warn( "No urb to complete damage transfer\n" );
+                                        return 0;
+                                }   
+                                cmd = urb->transfer_buffer;
+                                bytes_sent = 0;
+                        }
+                }
         }
-	}
-    if ( bytes_sent > 0 )
-        ret = dlfb_submit_urb(dev, urb, bytes_sent);
-    else
-        dlfb_urb_completion(urb);
+        if ( bytes_sent > 0 )
+                ret = dlfb_submit_urb(dev, urb, bytes_sent);
+        else
+                dlfb_urb_completion(urb);
 
 	atomic_add(bytes_sent, &dev->bytes_sent);
 	atomic_add(bytes_identical, &dev->bytes_identical);
@@ -368,9 +366,9 @@ static void dlfb_dpy_deferred_io(struct fb_info *info,
 	struct page *cur;
 	struct fb_deferred_io *fbdefio = info->fbdefio;
 	struct dlfb_data *dev = info->par;
-    int ymin, ymax;
-    bool bFirst = true;
-    int bytes = 0;
+        int ymin, ymax;
+        bool bFirst = true;
+        int bytes = 0;
 //pr_info("dlfb_dpy_deferred_io");
 
 	//pr_notice("D\n");
@@ -381,124 +379,124 @@ static void dlfb_dpy_deferred_io(struct fb_info *info,
 	if (!atomic_read(&dev->usb_active))
 		return;
 
-    // Measure the damage area, then call standard damage routine.
-    // Each page is 4k (2048 pixels wide), so we always do full lines
-	list_for_each_entry(cur, &fbdefio->pagelist, lru) 
-    {
-        int start = cur->index << PAGE_SHIFT;
-        int end = start + PAGE_SIZE;
+        // Measure the damage area, then call standard damage routine.
+        // Each page is 4k (2048 pixels wide), so we always do full lines
+        list_for_each_entry(cur, &fbdefio->pagelist, lru) 
+        {
+                int start = cur->index << PAGE_SHIFT;
+                int end = start + PAGE_SIZE;
 
-	    //pr_notice("%d %d\n", start, end );
-    
-        int scanline_len = 2 * dev->width;
-        int ystart = start / scanline_len;
-        int yend = (end / scanline_len)+1;
+                //pr_notice("%d %d\n", start, end );
 
-        bytes += PAGE_SIZE;
+                int scanline_len = 2 * dev->width;
+                int ystart = start / scanline_len;
+                int yend = (end / scanline_len)+1;
+
+                bytes += PAGE_SIZE;
+
+                if ( bFirst )
+                {
+                        ymin = ystart;
+                        ymax = yend;
+                        bFirst = false;
+                }
+                else
+                {
+                        if ( ystart < ymin )
+                                ymin = ystart;
+                        if ( yend > ymax )
+                                ymax = yend;
+                }
+        }
 
         if ( bFirst )
         {
-            ymin = ystart;
-            ymax = yend;
-            bFirst = false;
+                // Didn't find anything
         }
         else
         {
-            if ( ystart < ymin )
-                ymin = ystart;
-            if ( yend > ymax )
-                ymax = yend;
+                if ( ymin < 0 )
+                        ymin = 0;
+                if ( ymax >= dev->height )
+                        ymax = dev->height-1;
+                //pr_notice("y %d %d\n", ymin, ymax );
+                dlfb_handle_damage( dev, 0, ymin, dev->width, ymax-ymin+1,
+                                    info->screen_base);
         }
-	}
 
-    if ( bFirst )
-    {
-        // Didn't find anything
-    }
-    else
-    {
-        if ( ymin < 0 )
-            ymin = 0;
-        if ( ymax >= dev->height )
-            ymax = dev->height-1;
-	    //pr_notice("y %d %d\n", ymin, ymax );
-		dlfb_handle_damage( dev, 0, ymin, dev->width, ymax-ymin+1,
-			                info->screen_base);
-    }
-
-return;
+        return;
 }
 
 static int dlfb_get_edid(struct dlfb_data *dev, char *edid, int len)
 {
 	int i;
 
-    char usbdisplay32_edid[128] =
-{
-    // Header
-    0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, // 0-7
-    0, 0,                                           // 8-9
-    0, 0,                                           // 10-11
-    0, 0, 0, 0,                                     // 12-15
-    0,                                              // 16
-    0,                                              // 17
-    1,                                              // 18
-    3,                                              // 19
-    // Basic Display
-    0x80,                                           // 20 
-    10,                                             // 21
-    6,                                              // 22
-    100,                                            // 23
-    0x18,                                           // 24
-    // Chromaticity
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,                   // 25-34
-    // Established timing
-    0,                                              // 35
-    0,                                              // 36
-    0,                                              // 37
-    // Standard timing
-    (dev->width/8)-31, 0,                                          // 38-39
-    1, 1,                                           // 40-41
-    1, 1,                                           // 42-43
-    1, 1,                                           // 44-45
-    1, 1,                                           // 46-47
-    1, 1,                                           // 48-49
-    1, 1,                                           // 50-51
-    1, 1,                                           // 52-53
-    // desc 1 - timing detail
-    1,0,
-    dev->width & 0xFF,
-    0,
-    (dev->width & 0x0F00)>>4,
-    dev->height & 0xFF,
-    0,
-    (dev->height & 0x0F00)>>4,
-    0,
-    0,
-    0,
-    dev->width_mm,
-    dev->height_mm,
-    0,
-    0,
-    0,
-    0x18,
-    // desc 2 - Range Limits
-    0,0,0,
-    0xFD,
-    0,
-    1,1,1,1,10,
-    0,0,0,0,0,0,0,0,
-    // desc 3 - monitor name
-    0,0,0,
-    0xFC,
-    0,
-    'U','S','B','D','i','s','p','l','a','y','3','2','\n',
-    // desc 4 - serial #
-    0,0,0,
-    0xFF,
-    0,
-    '1','\n',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',
-    0
+        char usbdisplay32_edid[128] =
+        {
+                // Header
+                0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, // 0-7
+                0, 0,                                           // 8-9
+                0, 0,                                           // 10-11
+                0, 0, 0, 0,                                     // 12-15
+                0,                                              // 16
+                0,                                              // 17
+                1,                                              // 18
+                3,                                              // 19
+                // Basic Display
+                0x80,                                           // 20 
+                10,                                             // 21
+                6,                                              // 22
+                100,                                            // 23
+                0x18,                                           // 24
+                // Chromaticity
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0,                   // 25-34
+                // Established timing
+                0,                                              // 35
+                0,                                              // 36
+                0,                                              // 37
+                // Standard timing
+                (dev->width/8)-31, 0,                           // 38-39
+                1, 1,                                           // 40-41
+                1, 1,                                           // 42-43
+                1, 1,                                           // 44-45
+                1, 1,                                           // 46-47
+                1, 1,                                           // 48-49
+                1, 1,                                           // 50-51
+                1, 1,                                           // 52-53
+                // desc 1 - timing detail
+                1,0,
+                dev->width & 0xFF,
+                0,
+                (dev->width & 0x0F00)>>4,
+                dev->height & 0xFF,
+                0,
+                (dev->height & 0x0F00)>>4,
+                0,
+                0,
+                0,
+                dev->width_mm,
+                dev->height_mm,
+                0,
+                0,
+                0,
+                0x18,
+                // desc 2 - Range Limits
+                0,0,0,
+                0xFD,
+                0,
+                1,1,1,1,10,
+                0,0,0,0,0,0,0,0,
+                // desc 3 - monitor name
+                0,0,0,
+                0xFC,
+                0,
+                'U','S','B','D','i','s','p','l','a','y','3','2','\n',
+                // desc 4 - serial #
+                0,0,0,
+                0xFF,
+                0,
+                '1','\n',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',
+                0
 };
         char sum = 0;
 
@@ -507,8 +505,8 @@ static int dlfb_get_edid(struct dlfb_data *dev, char *edid, int len)
 
         for ( i = 0; i < sizeof(usbdisplay32_edid); i++ )
         {
-            edid[i] = usbdisplay32_edid[i];
-            sum += edid[i];
+                edid[i] = usbdisplay32_edid[i];
+                sum += edid[i];
         }
         edid[127] = -sum;
 
@@ -784,13 +782,13 @@ static int dlfb_ops_set_par(struct fb_info *info)
 	int result=0;
 	u16 *pix_framebuffer;
 	int i;
-    int backlight;
+        int backlight;
 
 	pr_notice("set_par mode %dx%d\n", info->var.xres, info->var.yres);
 
-    backlight = atomic_read(&dev->backlight_intensity);
-	pr_notice("set_par backlight %d\n",backlight );
-    dlfb_set_backlight( dev, backlight );
+        backlight = atomic_read(&dev->backlight_intensity);
+        pr_notice("set_par backlight %d\n",backlight );
+        dlfb_set_backlight( dev, backlight );
 
 	//result = dlfb_set_video_mode(dev, &info->var);
 
@@ -810,12 +808,9 @@ static int dlfb_ops_set_par(struct fb_info *info)
 }
 
 
-/*
- * In order to come back from full DPMS off, we need to set the mode again
- */
 static int dlfb_ops_blank(int blank_mode, struct fb_info *info)
 {
-    return 0;
+        return 0;
 }
 
 static struct fb_ops dlfb_ops = {
@@ -1083,55 +1078,6 @@ static ssize_t metrics_cpu_kcycles_used_show(struct device *fbdev,
 			atomic_read(&dev->cpu_kcycles_used));
 }
 
-static ssize_t edid_show(
-			struct file *filp,
-			struct kobject *kobj, struct bin_attribute *a,
-			 char *buf, loff_t off, size_t count) {
-	struct device *fbdev = container_of(kobj, struct device, kobj);
-	struct fb_info *fb_info = dev_get_drvdata(fbdev);
-	struct dlfb_data *dev = fb_info->par;
-
-	if (dev->edid == NULL)
-		return 0;
-
-	if ((off >= dev->edid_size) || (count > dev->edid_size))
-		return 0;
-
-	if (off + count > dev->edid_size)
-		count = dev->edid_size - off;
-
-	pr_info("sysfs edid copy %p to %p, %d bytes\n",
-		dev->edid, buf, (int) count);
-
-	memcpy(buf, dev->edid, count);
-
-	return count;
-}
-
-static ssize_t edid_store(
-			struct file *filp,
-			struct kobject *kobj, struct bin_attribute *a,
-			char *src, loff_t src_off, size_t src_size) {
-	struct device *fbdev = container_of(kobj, struct device, kobj);
-	struct fb_info *fb_info = dev_get_drvdata(fbdev);
-	struct dlfb_data *dev = fb_info->par;
-	int ret;
-
-	/* We only support write of entire EDID at once, no offset*/
-	if ((src_size != EDID_LENGTH) || (src_off != 0))
-		return -EINVAL;
-
-	ret = dlfb_setup_modes(dev, fb_info, src, src_size);
-	if (ret)
-		return ret;
-
-	if (!dev->edid || memcmp(src, dev->edid, src_size))
-		return -EINVAL;
-
-	pr_info("sysfs written EDID is new default\n");
-	dlfb_ops_set_par(fb_info);
-	return src_size;
-}
 
 static ssize_t metrics_reset_store(struct device *fbdev,
 			   struct device_attribute *attr,
@@ -1159,12 +1105,12 @@ static ssize_t backlight_store(struct device *fbdev,
 pr_info("backlight_store\n");
 	if ( sscanf( buf, "%d", &intensity ) > 0 )
 	{	
-	    if ( intensity < 0 )
-		    intensity = 0;
-	    else if ( intensity > 100 )
-		    intensity = 100;
-	    atomic_set(&dev->backlight_intensity, intensity);
-        dlfb_set_backlight( dev, atomic_read(&dev->backlight_intensity) );
+                if ( intensity < 0 )
+                        intensity = 0;
+                else if ( intensity > 100 )
+                        intensity = 100;
+                atomic_set(&dev->backlight_intensity, intensity);
+                dlfb_set_backlight( dev, atomic_read(&dev->backlight_intensity) );
 	}
 
 	return count;
@@ -1178,7 +1124,7 @@ static ssize_t bootloader_store(struct device *fbdev,
 	struct dlfb_data *dev = fb_info->par;
 pr_info("bootloader_store\n");
 
-    dlfb_set_bootloader( dev );
+        dlfb_set_bootloader( dev );
 
 	return count;
 }
@@ -1194,14 +1140,6 @@ pr_info("backlight_show\n");
 			atomic_read(&dev->backlight_intensity));
 }
 
-
-static struct bin_attribute edid_attr = {
-	.attr.name = "edid",
-	.attr.mode = 0666,
-	.size = EDID_LENGTH,
-	.read = edid_show,
-	.write = edid_store
-};
 
 static struct device_attribute fb_device_attrs[] = {
 	__ATTR_RO(metrics_bytes_rendered),
@@ -1228,7 +1166,7 @@ static int dlfb_parse_vendor_descriptor(struct dlfb_data *dev,
 {
 	char *desc;
 	char *buf;
-
+	int iRet = false;
 	int total_len = 0;
 
 pr_info("dlfb_parse_vendor_descriptor" );
@@ -1258,11 +1196,18 @@ pr_info("vendor_descriptor total_len=%d",total_len );
 		dev->width_mm = le16_to_cpu( *(u16 *)(desc+7) );
 		dev->height_mm = le16_to_cpu( *(u16 *)(desc+9) );
 		dev->display_type = *(desc+11);
-	    atomic_set(&dev->backlight_intensity, backlight);
+                atomic_set(&dev->backlight_intensity, backlight);
 
 		pr_info("width=%d, height=%d\n", dev->width,dev->height);
 		pr_info("width_mm=%d, height_mm=%d\n", dev->width_mm,dev->height_mm);
 		pr_info("display_type=%d\n", dev->display_type);
+		iRet = true;
+	}
+	else
+	{
+		pr_err("Failed to retrieve LCD descriptor.\n");
+		goto unrecognized;
+		
 	}
 
 	goto success;
@@ -1405,11 +1350,6 @@ static void dlfb_init_framebuffer_work(struct work_struct *work)
 		}
 	}
 
-	retval = device_create_bin_file(info->dev, &edid_attr);
-	if (retval) {
-		pr_warn("device_create_bin_file failed %d\n", retval);
-	}
-
 	pr_info("USBDisplay32 device /dev/fb%d attached. %dx%d resolution."
 			" Using %dK framebuffer memory\n", info->node,
 			info->var.xres, info->var.yres,
@@ -1445,7 +1385,6 @@ static void dlfb_usb_disconnect(struct usb_interface *interface)
 		/* remove udlfb's sysfs interfaces */
 		for (i = 0; i < ARRAY_SIZE(fb_device_attrs); i++)
 			device_remove_file(info->dev, &fb_device_attrs[i]);
-		device_remove_bin_file(info->dev, &edid_attr);
 		unlink_framebuffer(info);
 	}
 
@@ -1665,7 +1604,8 @@ MODULE_PARM_DESC(backlight, "Set backlight 0-100");
 
 MODULE_AUTHOR("Roberto De Ioris <roberto@unbit.it>, "
 	      "Jaya Kumar <jayakumar.lkml@gmail.com>, "
-	      "Bernie Thompson <bernie@plugable.com>");
+	      "Bernie Thompson <bernie@plugable.com>, "
+              "Frank Tkalcevic <frank@franksworkshop.com.au>" );
 MODULE_DESCRIPTION("USBDisplay32 kernel framebuffer driver");
 MODULE_LICENSE("GPL");
 
