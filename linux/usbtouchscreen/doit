@@ -1,0 +1,5 @@
+sudo rmmod usbtouchscreen
+make
+sudo make install
+sudo depmod -a
+sudo modprobe usbtouchscreen
