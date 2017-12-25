@@ -69,8 +69,8 @@ static struct usb_device_id id_table[] = {
 	{.idVendor = 0x1C40,
          .idProduct = 0x04DC,
          .bInterfaceClass = 0xff,
-         .bInterfaceSubClass = 0xFF,
-         .bInterfaceProtocol = 0xFF,
+         .bInterfaceSubClass = 0,
+         .bInterfaceProtocol = 0,
 	 .match_flags = USB_DEVICE_ID_MATCH_VENDOR |
 		USB_DEVICE_ID_MATCH_PRODUCT |
                 USB_DEVICE_ID_MATCH_INT_CLASS |
@@ -87,6 +87,7 @@ static bool fb_defio = true;  /* Detect mmap writes using page faults */
 static bool shadow = true; /* Optionally disable shadow framebuffer */
 static int backlight = 80; /* Default backlight intensity 0-100 */
 
+static void clearscreen( struct fb_info *info );
 
 /* dlfb keeps a list of urbs for efficient bulk transfers */
 static void dlfb_urb_completion(struct urb *urb);
@@ -207,7 +208,7 @@ int dlfb_handle_damage(struct dlfb_data *dev, int x, int y,
 	int bytes_identical = 0;
 	struct urb *urb;
 
-    //pr_info("Damage %d,%d %dx%d\n", x,y, width, height );
+    //pr_info("Handle Damage %d,%d, %dx%d\n", x,y, width, height );
 
 	start_cycles = get_cycles();
 
@@ -237,6 +238,8 @@ int dlfb_handle_damage(struct dlfb_data *dev, int x, int y,
         *cmd++ = height & 0xFF;
         bytes_sent = 9;
         ret = dlfb_submit_urb(dev, urb, bytes_sent);
+    if ( ret )
+        pr_err("Failed to submit urb");
          
 	urb = dlfb_get_urb(dev);
 	if (!urb)
@@ -263,6 +266,8 @@ int dlfb_handle_damage(struct dlfb_data *dev, int x, int y,
                         {
                                 // Full buffer
                                 ret = dlfb_submit_urb(dev, urb, bytes_sent);
+                if ( ret )
+                    pr_err("Failed to submit urb");
 
                                 urb = dlfb_get_urb(dev);
                                 if (!urb)
@@ -276,9 +281,13 @@ int dlfb_handle_damage(struct dlfb_data *dev, int x, int y,
                 }
         }
         if ( bytes_sent > 0 )
+    {
                 ret = dlfb_submit_urb(dev, urb, bytes_sent);
-        else
-                dlfb_urb_completion(urb);
+    }
+    else
+    {
+        dlfb_urb_completion(urb);
+    }
 
 	atomic_add(bytes_sent, &dev->bytes_sent);
 	atomic_add(bytes_identical, &dev->bytes_identical);
@@ -388,9 +397,8 @@ static void dlfb_dpy_deferred_io(struct fb_info *info,
 
                 //pr_notice("%d %d\n", start, end );
 
-                int scanline_len = 2 * dev->width;
-                int ystart = start / scanline_len;
-                int yend = (end / scanline_len)+1;
+        int ystart = start / dev->lcd.scanline_len;
+        int yend = (end / dev->lcd.scanline_len)+1;
 
                 bytes += PAGE_SIZE;
 
@@ -417,10 +425,10 @@ static void dlfb_dpy_deferred_io(struct fb_info *info,
         {
                 if ( ymin < 0 )
                         ymin = 0;
-                if ( ymax >= dev->height )
-                        ymax = dev->height-1;
-                //pr_notice("y %d %d\n", ymin, ymax );
-                dlfb_handle_damage( dev, 0, ymin, dev->width, ymax-ymin+1,
+        if ( ymax >= dev->lcd.yres )
+            ymax = dev->lcd.yres-1;
+	    //pr_notice("y %d %d\n", ymin, ymax );
+		dlfb_handle_damage( dev, 0, ymin, dev->lcd.xres, ymax-ymin+1,
                                     info->screen_base);
         }
 
@@ -455,8 +463,8 @@ static int dlfb_get_edid(struct dlfb_data *dev, char *edid, int len)
                 0,                                              // 36
                 0,                                              // 37
                 // Standard timing
-                (dev->width/8)-31, 0,                           // 38-39
-                1, 1,                                           // 40-41
+    (dev->lcd.xres/8)-31, 0,                                          // 38-39
+    1, 1,                                           // 40-41
                 1, 1,                                           // 42-43
                 1, 1,                                           // 44-45
                 1, 1,                                           // 46-47
@@ -465,17 +473,17 @@ static int dlfb_get_edid(struct dlfb_data *dev, char *edid, int len)
                 1, 1,                                           // 52-53
                 // desc 1 - timing detail
                 1,0,
-                dev->width & 0xFF,
-                0,
-                (dev->width & 0x0F00)>>4,
-                dev->height & 0xFF,
-                0,
-                (dev->height & 0x0F00)>>4,
-                0,
-                0,
-                0,
-                dev->width_mm,
-                dev->height_mm,
+    dev->lcd.xres & 0xFF,
+    0,
+    (dev->lcd.xres & 0x0F00)>>4,
+    dev->lcd.yres & 0xFF,
+    0,
+    (dev->lcd.yres & 0x0F00)>>4,
+    0,
+    0,
+    0,
+    dev->lcd.xres_mm,
+    dev->lcd.yres_mm,
                 0,
                 0,
                 0,
@@ -501,7 +509,7 @@ static int dlfb_get_edid(struct dlfb_data *dev, char *edid, int len)
         char sum = 0;
 
 	pr_info("get_edid\n");
-	pr_info("sizeof static_edid=%d\n", sizeof(usbdisplay32_edid) );
+	pr_info("sizeof static_edid=%d\n", (int)(sizeof(usbdisplay32_edid)) );
 
         for ( i = 0; i < sizeof(usbdisplay32_edid); i++ )
         {
@@ -704,6 +712,9 @@ static int dlfb_ops_release(struct fb_info *info, int user)
 
 	dev->fb_count--;
 
+	if (dev->fb_count == 0) {
+        clearscreen(info);
+    }
 	/* We can't free fb_info here - fbmem will touch it when we return */
 	if (dev->virtualized && (dev->fb_count == 0))
 		schedule_delayed_work(&dev->free_framebuffer_work, HZ);
@@ -732,8 +743,8 @@ static int dlfb_is_valid_mode(struct fb_videomode *mode,
 {
 	struct dlfb_data *dev = info->par;
 
-	if (mode->xres != dev->width ||
-            mode->yres != dev->height) {
+	if (mode->xres != dev->lcd.xres ||
+            mode->yres != dev->lcd.yres) {
 		pr_warn("%dx%d beyond chip capabilities\n",
 		       mode->xres, mode->yres);
 		return 0;
@@ -776,33 +787,37 @@ static int dlfb_ops_check_var(struct fb_var_screeninfo *var,
 	return 0;
 }
 
+static void clearscreen( struct fb_info *info )
+{
+    /* paint greenscreen */
+	struct dlfb_data *dev = info->par;
+    u16 *pix_framebuffer = (u16 *) info->screen_base;
+    int i;
+
+    for (i = 0; i < info->fix.smem_len / 2; i++)
+        pix_framebuffer[i] = 0x37e6;
+
+    dlfb_handle_damage(dev, 0, 0, info->var.xres, info->var.yres,
+               info->screen_base);
+}
+
 static int dlfb_ops_set_par(struct fb_info *info)
 {
 	struct dlfb_data *dev = info->par;
 	int result=0;
-	u16 *pix_framebuffer;
-	int i;
-        int backlight;
+    int backlight;
 
 	pr_notice("set_par mode %dx%d\n", info->var.xres, info->var.yres);
 
-        backlight = atomic_read(&dev->backlight_intensity);
-        pr_notice("set_par backlight %d\n",backlight );
-        dlfb_set_backlight( dev, backlight );
+    backlight = atomic_read(&dev->backlight_intensity);
+    pr_notice("set_par backlight %d\n",backlight );
+    dlfb_set_backlight( dev, backlight );
 
 	//result = dlfb_set_video_mode(dev, &info->var);
 
 	if ((result == 0) && (dev->fb_count == 0)) {
-
-		/* paint greenscreen */
-
-		pix_framebuffer = (u16 *) info->screen_base;
-		for (i = 0; i < info->fix.smem_len / 2; i++)
-			pix_framebuffer[i] = 0x37e6;
-
-		dlfb_handle_damage(dev, 0, 0, info->var.xres, info->var.yres,
-				   info->screen_base);
-	}
+        clearscreen( info );
+    }
 
 	return result;
 }
@@ -1184,23 +1199,36 @@ pr_info("vendor_descriptor total_len=%d",total_len );
 
 
 	if (total_len > 5) {
-		pr_info("vendor descriptor length:%x\n", total_len );
+		pr_info("vendor descriptor length:%x data:%02x %02x %02x %02x" \
+			"%02x %02x %02x %02x %02x %02x %02x\n",
+			total_len, desc[0],
+			desc[1], desc[2], desc[3], desc[4], desc[5], desc[6],
+			desc[7], desc[8], desc[9], desc[10]);
 
 		if ((desc[0] != total_len) || /* descriptor length */
 		    (desc[1] != USB_DT_LCD) ||   /* vendor descriptor type */
 		    (desc[2] != 0x01) )  /* version (1 bytes) */
 			goto unrecognized;
 
-		dev->width = le16_to_cpu( *(u16 *)(desc+3) );
-		dev->height = le16_to_cpu( *(u16 *)(desc+5) );
-		dev->width_mm = le16_to_cpu( *(u16 *)(desc+7) );
-		dev->height_mm = le16_to_cpu( *(u16 *)(desc+9) );
-		dev->display_type = *(desc+11);
-                atomic_set(&dev->backlight_intensity, backlight);
 
-		pr_info("width=%d, height=%d\n", dev->width,dev->height);
-		pr_info("width_mm=%d, height_mm=%d\n", dev->width_mm,dev->height_mm);
-		pr_info("display_type=%d\n", dev->display_type);
+        dev->lcd.xres = le16_to_cpu( *(u16 *)(desc+3) );
+        dev->lcd.yres = le16_to_cpu( *(u16 *)(desc+5) );
+        dev->lcd.xres_mm = le16_to_cpu( *(u16 *)(desc+7) );
+        dev->lcd.yres_mm = le16_to_cpu( *(u16 *)(desc+9) );
+        dev->lcd.scanline_len = le16_to_cpu( *(u16 *)(desc+11) );
+        dev->lcd.bitsperpixel = *(desc+13);
+        dev->lcd.display_type = *(desc+14);
+        dev->lcd.endpoint = 2;
+		
+        atomic_set(&dev->backlight_intensity, backlight);
+
+		pr_info("width=%d, height=%d\n", dev->lcd.xres, dev->lcd.yres );
+		pr_info("width_mm=%d, height_mm=%d\n", dev->lcd.xres_mm, dev->lcd.yres_mm );
+		pr_info("scanline_len=%d, bitsperpixel=%d\n", dev->lcd.scanline_len, dev->lcd.bitsperpixel);
+		pr_info("display_type=%d\n", dev->lcd.display_type);
+        pr_info("PAGE_SIZE=%d\n", (int)(PAGE_SIZE) );
+        pr_info("MAX_TRANSFER=%d\n", (int)(MAX_TRANSFER) );
+
 		iRet = true;
 	}
 	else
@@ -1260,8 +1288,7 @@ static int dlfb_usb_probe(struct usb_interface *interface,
 		goto error;
 	}
 
-	dev->sku_pixel_limit = dev->width * dev->width; /* default to maximum */
-
+	dev->sku_pixel_limit = dev->lcd.xres * dev->lcd.yres; /* default to maximum */
 
 	if (!dlfb_alloc_urb_list(dev, WRITES_IN_FLIGHT, MAX_TRANSFER)) {
 		retval = -ENOMEM;
@@ -1523,7 +1550,7 @@ static int dlfb_alloc_urb_list(struct dlfb_data *dev, int count, size_t size)
 		}
 
 		/* urb->transfer_buffer_length set to actual before submit */
-		usb_fill_bulk_urb(urb, dev->udev, usb_sndbulkpipe(dev->udev, ENDPOINT_NO),
+		usb_fill_bulk_urb(urb, dev->udev, usb_sndbulkpipe(dev->udev, dev->lcd.endpoint),
 			buf, size, dlfb_urb_completion, unode);
 		urb->transfer_flags |= URB_NO_TRANSFER_DMA_MAP;
 

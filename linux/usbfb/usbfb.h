@@ -32,12 +32,24 @@ struct urb_list {
 	size_t size;
 };
 
+struct lcd_info {
+    int xres;
+    int yres;
+    int xres_mm;
+    int yres_mm;
+    int scanline_len;
+    int display_type;
+    int bitsperpixel;
+    int endpoint;
+};
+
 struct dlfb_data {
 	struct usb_device *udev;
 	struct device *gdev; /* &udev->dev */
 	struct fb_info *info;
 	struct urb_list urbs;
 	struct kref kref;
+    struct lcd_info lcd;
 	char *backing_buffer;
 	int fb_count;
 	bool virtualized; /* true when physical usb device not present */
@@ -47,11 +59,6 @@ struct dlfb_data {
 	atomic_t lost_pixels; /* 1 = a render op failed. Need screen refresh */
 	char *edid; /* null until we read edid from hw or get from sysfs */
 	size_t edid_size;
-    u16 width;
-    u16 height;
-    u16 width_mm;
-    u16 height_mm;
-    u8 display_type;
 	int sku_pixel_limit;
 	int base16;
 	int base8;
