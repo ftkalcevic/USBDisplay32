@@ -84,10 +84,8 @@ typedef struct {
 #define	LCD_DISPLAY_SUBCLASS	0
 #define	LCD_DISPLAY_PROTOCOL	0
 #define USB_DT_LCD				0x30
-#define UDI_LCD_IFACE_NUMBER	0
 #define LCD_VERSION				1
 
-#define  UDI_LCD_DATA_EP_OUT           (2 | USB_EP_DIR_OUT)	// RX
 
 //! Content of CDC COMM interface descriptor for all speed
 #define UDI_LCD_IFACE_DESC        {\
