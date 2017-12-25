@@ -43,6 +43,9 @@
 #include "udc.h"
 #include "udi_lcd.h"
 #include <string.h>
+#include <stdio.h>
+#include <stdarg.h>
+#include <stdlib.h>
 
 
 #include "displaycommands.h"
@@ -64,6 +67,30 @@
 
 #define NEXT_BUFFER(idx) ((idx==0)?1:0)
 //#define NEXT_BUFFER(idx) ((idx==UDI_LCD_RX_BUFFERS-1)?0:idx+1)
+
+static const char Hex[16] = { '0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F' };
+
+static void serial_write_string( volatile avr32_usart_t *usart, const char *s )
+{
+	while (*s)
+	{
+		usart_serial_putchar( usart, *s );
+		s++;
+	}
+}
+
+extern volatile bool bRendering;
+
+static void DebugWrite( const char *s )
+{
+	static uint8_t n = 0;
+	usart_serial_putchar( &DEVICE_USART, Hex[n>>4] );
+	usart_serial_putchar( &DEVICE_USART, Hex[n&0xF] );
+	usart_serial_putchar( &DEVICE_USART, ':' );
+	serial_write_string( &DEVICE_USART, s );
+	serial_write_string( &DEVICE_USART, "\r\n" );
+	n++;
+}
 
 
 bool udi_lcd_data_enable(void);
@@ -235,14 +262,24 @@ void udi_lcd_data_recevied(udd_ep_status_t status, iram_size_t n)
 		// New cmd
 		if ( rx_buffer[buf_sel_trans].cmd.blt.cmd == CMD_BITBLT )
 		{
+			//char buf[40];
+			//snprintf(buf,sizeof(buf)-1,"B%d,%d %dx%d", rx_buffer[buf_sel_trans].cmd.bltrle.x, 
+													   //rx_buffer[buf_sel_trans].cmd.bltrle.y, 
+													   //rx_buffer[buf_sel_trans].cmd.bltrle.width, 
+													   //rx_buffer[buf_sel_trans].cmd.bltrle.height );
+			//DebugWrite( buf );
+
 			udi_lcd_blt_bytes_to_go = rx_buffer[buf_sel_trans].cmd.blt.width;
 			udi_lcd_blt_bytes_to_go *= rx_buffer[buf_sel_trans].cmd.blt.height;
 			udi_lcd_blt_bytes_to_go *= 2;
 			
+			bRendering = true;
+
 			LCD_BltStart(rx_buffer[buf_sel_trans].cmd.bltrle.x, rx_buffer[buf_sel_trans].cmd.bltrle.y, rx_buffer[buf_sel_trans].cmd.bltrle.width, rx_buffer[buf_sel_trans].cmd.bltrle.height );
 		}
 		else if ( rx_buffer[buf_sel_trans].cmd.light.cmd == CMD_SET_BACKLIGHT && n >= sizeof(rx_buffer[buf_sel_trans].cmd.light) )
 		{
+			//DebugWrite( "L" );
 			
 			LCD_SetBacklight( rx_buffer[buf_sel_trans].cmd.light.intensity );
 		}
@@ -270,7 +307,19 @@ void udi_lcd_data_recevied(udd_ep_status_t status, iram_size_t n)
 	else
 	{
 		// Receive data.  That should have been copied via DMA.
+		//char s[20];
+		//s[0] = 'D';
+		//s[1] = Hex[n >> 8];
+		//s[2] = Hex[((n>>4) & 0xF)];
+		//s[3] = Hex[(n & 0xF)];
+		//s[4] = 0;
+		//DebugWrite( s );
+		if ( n > udi_lcd_blt_bytes_to_go  )
+			DebugWrite( "n > ud" );
+
 		udi_lcd_blt_bytes_to_go -= n;
+		if ( udi_lcd_blt_bytes_to_go  == 0 )
+			bRendering = 0;
 	}
 
 	udi_lcd_rx_buf_nb[buf_sel_trans] = 0;

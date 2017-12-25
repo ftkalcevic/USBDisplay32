@@ -804,7 +804,7 @@ int usart_send_address(volatile avr32_usart_t *usart, int address)
 
 #define RS232_TXBUFFER
 #ifdef RS232_TXBUFFER
-    #define TX_BUFFER_SIZE  (2048)
+    #define TX_BUFFER_SIZE  (4096)
     #define TX_BUFFER_MASK ( TX_BUFFER_SIZE - 1 )
     #if ( TX_BUFFER_SIZE & TX_BUFFER_MASK )
         #error TX buffer size is not a power of 2
@@ -824,9 +824,13 @@ int usart_write_char(volatile avr32_usart_t *usart, int c)
     // Calculate buffer index
     tmphead = ( TxHead + 1 ) & TX_BUFFER_MASK; 
 	
-    // Wait for free space in buffer
-    while ( tmphead == TxTail )
-	continue;
+    //// Wait for free space in buffer
+    //while ( tmphead == TxTail )
+	//continue;
+
+    // Don't block
+    if ( tmphead == TxTail )
+		return USART_SUCCESS;
 
     TxBuf[tmphead] = c;                 // Store data in buffer
     TxHead = tmphead;                   // Store new index

@@ -30,6 +30,8 @@
 #define USE_USB_CDC
 
 
+volatile bool bRendering;
+
 #include "../fonts/Font6x13.h"
 //#include "../fonts/FontTypewriter.h"
 
@@ -524,6 +526,7 @@ static void DisplayStartupMsg()
 	s[sizeof(s)-1] = '\0';
 	lcdtext.WriteString( s );
 	serial_write_string( &DEVICE_USART, s );
+	serial_write_string( &DEVICE_USART, "\r" );
 }
 
 static void speedtest2( void )
@@ -646,6 +649,8 @@ void user_callback_resume_action(void)
 	bResume = true;
 }
 
+volatile bool bDraw = false;
+
 int main (void)
 {
 	bSuspend = bResume = false;
@@ -663,7 +668,6 @@ int main (void)
 	//lcd.SetForegroundColour(RGB(0x7F,0x7F,0x7F));
 
 	DisplayStartupMsg();
-
 	
 	//gpio_enable_pin_interrupt( TOUCH_nPENIRQ, GPIO_FALLING_EDGE);
 	uint16_t x = 0;
@@ -695,6 +699,8 @@ int main (void)
 			oldrtc = AVR32_RTC.val;
 			//lcdtext.WriteString("Tick ");
 		}
+		if (0)
+		{
 		if ( touch_busy() == 0 )
 		{
 			if ( gpio_get_pin_value(TOUCH_nPENIRQ) == 0 )
@@ -716,6 +722,7 @@ int main (void)
 			if ( y > SCREEN_HEIGHT ) x = SCREEN_HEIGHT - 1;
 			lcd.DrawPixel( x, y );
 		}
+		}
 		//delay_ms(1);
         //extern int bytes_read;
         //char s[30];
@@ -725,6 +732,38 @@ int main (void)
 		if ( bSuspend ) Suspend();
 		if ( bResume ) Resume();
 
+		if ( touch_busy() == 0 )
+		{
+			if ( gpio_get_pin_value(TOUCH_nPENIRQ) == 0 )
+			{
+				touch_init_read();
+				n = 0;
+			}
+		}
+		else if ( touch_complete() )
+		{
+			serial_write_string(&DEVICE_USART, "T");
+			while ( bRendering )
+				continue;
+			//lcd.Init();
+//			lcd.Recover();
+			lcd.BltStart(0,0,400,240);
+			for ( int i = 0; i < 5000; i++ )
+				lcd.WriteData(0xFFFF);
+		}
+		if ( bDraw )
+		{
+			bDraw = 0;
+
+			lcd.Init();
+			lcd.BltStart(0,0,400,240);
+			for ( int i = 0; i < 5000; i++ )
+				lcd.WriteData(0xFFFF);
+			//lcd.SetForegroundColour(0x5555);
+			//lcd.SolidRect(0,0,200,20);
+			//lcdtext.SetTextCursor(0,1);
+			//lcdtext.WriteString("Touch is pressed");
+		}
     }
 
 /*	
@@ -750,12 +789,14 @@ int main (void)
 
 Composite device
     - CDC - serial commands
-        - flow control
-        - ack
-        - timeout
-    - ANSI 
-    - USB display
-    - mouse (touch screen)
+		- 1 x EP_IN (notify)
+		- 2 x EP_OUT (data, comm)
+    - USB LCD display
+		- 1 x EP_OUT
+    - touch screen
+		- 1 x EP_OUT
+	- generic hid
+		- can be on control
 SPI
 TTL Serial?
 ASCII - curses

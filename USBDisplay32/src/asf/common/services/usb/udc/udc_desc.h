@@ -108,6 +108,8 @@ typedef struct {
 	uint16_t wHeight;
 	uint16_t wWidthMM;
 	uint16_t wHeightMM;
+	uint16_t wScanlineLen;
+	uint8_t bBitsPerPixel;
 	uint8_t bDisplayType;
 } usb_lcd_desc_t ;
 

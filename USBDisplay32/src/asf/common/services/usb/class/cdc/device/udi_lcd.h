@@ -116,6 +116,8 @@ typedef struct {
    .wHeight					 = LE16(SCREEN_HEIGHT),\
    .wWidthMM				 = LE16(SCREEN_WIDTH_MM),\
    .wHeightMM				 = LE16(SCREEN_HEIGHT_MM),\
+   .wScanlineLen			 = LE16(SCREEN_SCANLINE_LEN),\
+   .bBitsPerPixel			 = SCREEN_BITS_PER_PIXEL,\
    .bDisplayType			 = DISPLAY_TYPE,\
 }
 
