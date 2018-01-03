@@ -103,8 +103,51 @@ extern void user_callback_resume_action(void);
 //! Interface callback definition
 #define  UDI_LCD_RX_NOTIFY()              
 
+#define  USB_DEVICE_NB_INTERFACE       2
+
+#define UDI_HID_TOUCH_EP_IN           (1 | USB_EP_DIR_IN)
+#define UDI_LCD_DATA_EP_OUT           (2 | USB_EP_DIR_OUT)	// RX
+
+#define UDI_LCD_IFACE_NUMBER			0
+#define UDI_HID_TOUCH_IFACE_NUMBER		1
+
+
+
+/**
+ * Configuration of HID Mouse interface (if used)
+ * @{
+ */
+//! Interface callback definition
+#define  UDI_HID_TOUCH_ENABLE_EXT()       true
+#define  UDI_HID_TOUCH_DISABLE_EXT()
+// #define UDI_HID_MOUSE_ENABLE_EXT() my_callback_mouse_enable()
+// extern bool my_callback_mouse_enable(void);
+// #define UDI_HID_MOUSE_DISABLE_EXT() my_callback_mouse_disable()
+// extern void my_callback_mouse_disable(void);
+
+
+
+
+
+#define UDI_COMPOSITE_DESC_T	\
+udi_lcd_iface_desc_t udi_lcd;	\
+udi_hid_touch_desc_t udi_hid_touch;
+
+
+#define UDI_COMPOSITE_DESC_FS					\
+.udi_lcd				= UDI_LCD_IFACE_DESC,	\
+.udi_hid_touch			= UDI_HID_TOUCH_DESC
+
+#define UDI_COMPOSITE_DESC_HS \
+.udi_lcd				   = UDI_LCD_IFACE_DESC,\
+.udi_hid_touch			   = UDI_HID_TOUCH_DESC
+
+#define UDI_COMPOSITE_API	\
+&udi_api_lcd_data,			\
+&udi_api_hid_touch
 
 //! The includes of classes and other headers must be done at the end of this file to avoid compile error
 #include "udi_lcd_conf.h"
+#include "udi_hid_touch.h"
 
 #endif // _CONF_USB_H_

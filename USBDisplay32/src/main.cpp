@@ -22,6 +22,7 @@
 #include "serial.h"
 #include "touch.h"
 #include "lcd_conf.h"
+#include "udi_hid_touch.h"
 
 #include "lcdiface_hx8352a.h"
 #include "lcdiface_ssd1963.h"
@@ -699,8 +700,7 @@ int main (void)
 			oldrtc = AVR32_RTC.val;
 			//lcdtext.WriteString("Tick ");
 		}
-		if (0)
-		{
+
 		if ( touch_busy() == 0 )
 		{
 			if ( gpio_get_pin_value(TOUCH_nPENIRQ) == 0 )
@@ -711,18 +711,17 @@ int main (void)
 		}
 		else if ( touch_complete() )
 		{
-			char s[50];
-			snprintf(s, sizeof(s), "%d,%d  %d           ", touch_x, touch_y,n);
-			s[sizeof(s)-1]=0;
-			lcdtext.SetTextCursor(0,1);
-			lcdtext.WriteString(s);
-			uint16_t x = (touch_x >> 7);
-			uint8_t y = (touch_y >> 7);
-			if ( x > SCREEN_WIDTH ) x = SCREEN_WIDTH - 1;
-			if ( y > SCREEN_HEIGHT ) x = SCREEN_HEIGHT - 1;
-			lcd.DrawPixel( x, y );
+			udi_hid_touch(touch_x, touch_y, touch_z1);
+//
+			//int p = touch_x * touch_z2 / touch_z1 - touch_x;
+//
+			//char s[50];
+			//snprintf(s, sizeof(s), "%d,%d  p=%d          ", touch_x, touch_y, p);
+			//s[sizeof(s)-1]=0;
+			//lcdtext.SetTextCursor(0,1);
+			//lcdtext.WriteString(s);
 		}
-		}
+
 		//delay_ms(1);
         //extern int bytes_read;
         //char s[30];
@@ -732,38 +731,38 @@ int main (void)
 		if ( bSuspend ) Suspend();
 		if ( bResume ) Resume();
 
-		if ( touch_busy() == 0 )
-		{
-			if ( gpio_get_pin_value(TOUCH_nPENIRQ) == 0 )
-			{
-				touch_init_read();
-				n = 0;
-			}
-		}
-		else if ( touch_complete() )
-		{
-			serial_write_string(&DEVICE_USART, "T");
-			while ( bRendering )
-				continue;
+		//if ( touch_busy() == 0 )
+		//{
+			//if ( gpio_get_pin_value(TOUCH_nPENIRQ) == 0 )
+			//{
+				//touch_init_read();
+				//n = 0;
+			//}
+		//}
+		//else if ( touch_complete() )
+		//{
+			//serial_write_string(&DEVICE_USART, "T");
+			//while ( bRendering )
+				//continue;
+			////lcd.Init();
+////			lcd.Recover();
+			//lcd.BltStart(0,0,400,240);
+			//for ( int i = 0; i < 5000; i++ )
+				//lcd.WriteData(0xFFFF);
+		//}
+		//if ( bDraw )
+		//{
+			//bDraw = 0;
+//
 			//lcd.Init();
-//			lcd.Recover();
-			lcd.BltStart(0,0,400,240);
-			for ( int i = 0; i < 5000; i++ )
-				lcd.WriteData(0xFFFF);
-		}
-		if ( bDraw )
-		{
-			bDraw = 0;
-
-			lcd.Init();
-			lcd.BltStart(0,0,400,240);
-			for ( int i = 0; i < 5000; i++ )
-				lcd.WriteData(0xFFFF);
-			//lcd.SetForegroundColour(0x5555);
-			//lcd.SolidRect(0,0,200,20);
-			//lcdtext.SetTextCursor(0,1);
-			//lcdtext.WriteString("Touch is pressed");
-		}
+			//lcd.BltStart(0,0,400,240);
+			//for ( int i = 0; i < 5000; i++ )
+				//lcd.WriteData(0xFFFF);
+			////lcd.SetForegroundColour(0x5555);
+			////lcd.SolidRect(0,0,200,20);
+			////lcdtext.SetTextCursor(0,1);
+			////lcdtext.WriteString("Touch is pressed");
+		//}
     }
 
 /*	

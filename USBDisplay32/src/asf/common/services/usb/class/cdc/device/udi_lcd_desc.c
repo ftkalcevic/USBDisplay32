@@ -44,7 +44,6 @@
 
 
 
-#define  USB_DEVICE_NB_INTERFACE       1
 
 /**INDENT-OFF**/
 
@@ -99,7 +98,7 @@ UDC_DESC_STORAGE usb_dev_qual_desc_t udc_device_qual = {
 COMPILER_PACK_SET(1);
 typedef struct {
 	usb_conf_desc_t conf;
-	udi_lcd_iface_desc_t udi_lcd;
+	UDI_COMPOSITE_DESC_T;
 } udc_desc_t;
 COMPILER_PACK_RESET();
 
@@ -114,7 +113,7 @@ UDC_DESC_STORAGE udc_desc_t udc_desc = {
 	.conf.iConfiguration       = 0,
 	.conf.bmAttributes         = USB_CONFIG_ATTR_MUST_SET | USB_DEVICE_ATTR,
 	.conf.bMaxPower            = USB_CONFIG_MAX_POWER(USB_DEVICE_POWER),
-	.udi_lcd				   = UDI_LCD_IFACE_DESC,
+	UDI_COMPOSITE_DESC_HS
 };
 
 
@@ -128,7 +127,7 @@ UDC_DESC_STORAGE usb_lcd_desc_t lcd_desc = UDI_LCD_DESC;
 
 //! Associate an UDI for each USB interface 
 UDC_DESC_STORAGE udi_api_t *udi_apis[USB_DEVICE_NB_INTERFACE] = {
-	&udi_api_lcd_data,
+	UDI_COMPOSITE_API 
 };
 
 //! Add UDI with USB Descriptors FS & HS
