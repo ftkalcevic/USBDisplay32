@@ -1,4 +1,4 @@
-CFLAGS_usbtouchscreen.o = -DCONFIG_TOUCHSCREEN_USB_FINGERVU436
+CFLAGS_usbts.o = -DCONFIG_TOUCHSCREEN_USB_FINGERVU436 -DCONFIG_TOUCHSCREEN_USB_USBDISPLAY32
 ifndef KERNELRELEASE
 
 PWD := $(shell pwd)
@@ -12,6 +12,6 @@ install:
 	$(MAKE) -C /lib/modules/`uname -r`/build SUBDIRS=$(PWD) modules_install
 
 else
-     obj-m := usbtouchscreen.o
+     obj-m := usbts.o
 endif
 

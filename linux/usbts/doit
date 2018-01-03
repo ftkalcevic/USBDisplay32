@@ -1,0 +1,5 @@
+sudo rmmod usbts
+make
+sudo make install
+sudo depmod -a
+sudo modprobe usbts

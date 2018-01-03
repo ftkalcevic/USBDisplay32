@@ -82,7 +82,7 @@ static struct usb_device_id id_table[] = {
 MODULE_DEVICE_TABLE(usb, id_table);
 
 /* module options */
-static bool console = true; /* Allow fbcon to open framebuffer */
+static bool console = false; /* Allow fbcon to open framebuffer */
 static bool fb_defio = true;  /* Detect mmap writes using page faults */
 static bool shadow = true; /* Optionally disable shadow framebuffer */
 static int backlight = 80; /* Default backlight intensity 0-100 */
